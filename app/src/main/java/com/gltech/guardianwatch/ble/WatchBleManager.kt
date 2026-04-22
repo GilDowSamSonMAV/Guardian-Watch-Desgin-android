@@ -148,6 +148,7 @@ class WatchBleManager(context: Context) : BleManager(context) {
             accelMagG = tm.accelMagG,
             batteryPct = currentBattery,
             rssiDbm = currentRssi,
+            movementClass = tm.movementClass,
         )
         _vitals.tryEmit(frame)
     }
@@ -172,6 +173,7 @@ class WatchBleManager(context: Context) : BleManager(context) {
             accelMagG = null,
             batteryPct = currentBattery,
             rssiDbm = currentRssi,
+            movementClass = null,     // standard HR profile has no movement classification
         )
         _vitals.tryEmit(frame)
     }

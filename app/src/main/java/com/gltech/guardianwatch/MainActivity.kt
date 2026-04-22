@@ -30,6 +30,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Identity of the medic running this tablet. Stamped onto every audit entry.
+ *  TODO: source from a login screen / device profile once auth is wired. */
+private const val SELF_ID = "M.ROSEN"
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -144,7 +148,10 @@ private fun App(
         })
         AppMode.MEDIC_DASHBOARD -> MedicDashboardScreen(
             streams = streams,
-            selfId = "M.ROSEN",
+            selfId = SELF_ID,
+            onHandoffConfirmed = { casualtyId, event ->
+                vitalsRepository.appendAudit(casualtyId, event, SELF_ID)
+            },
         )
         AppMode.SINGLE_PAIRED -> SinglePairedScreen(stream = streams.values.firstOrNull())
         AppMode.RELAY -> RelayScreen(streams = streams, upstreamConnected = false)

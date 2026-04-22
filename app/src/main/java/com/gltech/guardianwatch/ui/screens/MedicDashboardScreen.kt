@@ -27,6 +27,7 @@ import java.util.*
 fun MedicDashboardScreen(
     streams: Map<String, CasualtyStream>,
     selfId: String,
+    onHandoffConfirmed: (casualtyId: String, event: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     var selectedNav by remember { mutableStateOf(NavItem.CASUALTIES) }
@@ -133,10 +134,14 @@ fun MedicDashboardScreen(
                     Spacer(Modifier.height(16.dp))
 
                     if (showConfirm) {
+                        val handoffEvent = "HANDOFF → ROLE-2"
                         ConfirmBar(
                             label = "Handoff to ROLE-2 for",
                             target = featured.casualty.id,
-                            onConfirm = { showConfirm = false /* TODO: append chain entry */ },
+                            onConfirm = {
+                                onHandoffConfirmed(featured.casualty.id, handoffEvent)
+                                showConfirm = false
+                            },
                             onCancel = { showConfirm = false },
                         )
                     }

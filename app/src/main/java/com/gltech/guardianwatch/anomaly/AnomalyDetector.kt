@@ -42,10 +42,12 @@ class AnomalyDetector {
     private val WINDOW_MS = 60_000L
 
     /**
-     * Assess a single vitals frame. Caller feeds in the movement class (0..4)
-     * separately since VitalsFrame only carries accel magnitude, not classified state.
+     * Assess a single vitals frame. Movement class is pulled from `frame.movementClass`
+     * (populated by the watch's Connect IQ classifier via GuardianWatchProfile).
+     * Falls back to STILL when only the standard HR service is available (no movement data).
      */
-    fun assess(frame: VitalsFrame, movementClass: Int = AnomalyThresholds.MOVEMENT_STILL): VitalAssessment {
+    fun assess(frame: VitalsFrame): VitalAssessment {
+        val movementClass = frame.movementClass ?: AnomalyThresholds.MOVEMENT_STILL
         // Update HR window
         frame.hrBpm?.let { hr ->
             hrWindow.addLast(frame.timestampMs to hr)

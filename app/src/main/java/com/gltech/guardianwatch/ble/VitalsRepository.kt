@@ -4,6 +4,7 @@ import com.gltech.guardianwatch.anomaly.AnomalyDetector
 import com.gltech.guardianwatch.casualty.Casualty
 import com.gltech.guardianwatch.casualty.VitalAssessment
 import com.gltech.guardianwatch.casualty.VitalsFrame
+import com.gltech.guardianwatch.casualty.withAuditEntry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -76,6 +77,20 @@ class VitalsRepository @Inject constructor() {
                 assessment = assessment,
                 hrHistory = newHistory,
             ))
+        }
+    }
+
+    /**
+     * Append an immutable, hash-chained audit entry to the casualty's chain of custody.
+     * Safe to call from any thread — `StateFlow.update` is CAS-based. No-op if the
+     * casualty isn't registered.
+     */
+    fun appendAudit(casualtyId: String, event: String, handlerInitials: String) {
+        _streams.update { current ->
+            val existing = current[casualtyId] ?: return@update current
+            val nowMs = System.currentTimeMillis()
+            val updatedCasualty = existing.casualty.withAuditEntry(event, handlerInitials, nowMs)
+            current + (casualtyId to existing.copy(casualty = updatedCasualty))
         }
     }
 }
