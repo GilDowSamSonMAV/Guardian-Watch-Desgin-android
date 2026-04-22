@@ -1,0 +1,23 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+
+# Local config (machine-specific)
+local.properties
+
+# Output
+/app/build/
+/app/release/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

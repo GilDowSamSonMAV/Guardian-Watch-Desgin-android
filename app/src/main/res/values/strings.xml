@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Guardian Watch</string>
+    <string name="kiosk_admin_label">Guardian Watch Kiosk</string>
+    <string name="kiosk_admin_description">Required for field-kiosk mode: prevents accidental exit during casualty handling.</string>
+
+    <!-- Mode selection -->
+    <string name="mode_select_title">SELECT OPERATING MODE</string>
+    <string name="mode_select_subtitle">Mode persists until explicitly changed.</string>
+
+    <!-- BLE -->
+    <string name="ble_service_notif_title">Guardian Watch — Active</string>
+    <string name="ble_service_notif_body">Streaming vitals from %1$d watch(es).</string>
+    <string name="ble_service_channel">Vitals Streaming</string>
+
+    <!-- Permissions -->
+    <string name="perm_rationale_ble">Guardian Watch needs Bluetooth access to receive vitals from casualty watches.</string>
+
+    <!-- Critical banner -->
+    <string name="critical_hemorrhage">CRITICAL — HEMORRHAGE SUSPECTED</string>
+    <string name="acknowledge">ACKNOWLEDGE</string>
+</resources>

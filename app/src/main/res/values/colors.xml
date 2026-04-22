@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_000">#FF0C0806</color>
+    <color name="crit_red">#FFEE0B2A</color>
+    <color name="state_live">#FF4BC98F</color>
+</resources>
