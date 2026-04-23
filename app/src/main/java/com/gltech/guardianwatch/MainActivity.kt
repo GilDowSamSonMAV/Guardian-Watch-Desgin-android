@@ -18,12 +18,14 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.compose.runtime.*
 import com.gltech.guardianwatch.ble.BleService
+import com.gltech.guardianwatch.ble.ScannedDevice
 import com.gltech.guardianwatch.ble.VitalsRepository
 import com.gltech.guardianwatch.casualty.Casualty
 import com.gltech.guardianwatch.casualty.Triage
 import com.gltech.guardianwatch.kiosk.KioskController
 import com.gltech.guardianwatch.mode.AppMode
 import com.gltech.guardianwatch.mode.ModeController
+import com.gltech.guardianwatch.ui.components.PairingDialog
 import com.gltech.guardianwatch.ui.screens.*
 import com.gltech.guardianwatch.ui.theme.GuardianWatchTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -42,14 +44,14 @@ class MainActivity : ComponentActivity() {
     private lateinit var modeController: ModeController
     private lateinit var kioskController: KioskController
 
-    private var bleService: BleService? = null
+    private val bleServiceState = mutableStateOf<BleService?>(null)
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
-            bleService = (binder as? BleService.LocalBinder)?.service()
+            bleServiceState.value = (binder as? BleService.LocalBinder)?.service()
             maybeSeedDemoCasualty()
         }
         override fun onServiceDisconnected(name: ComponentName?) {
-            bleService = null
+            bleServiceState.value = null
         }
     }
 
@@ -87,6 +89,7 @@ class MainActivity : ComponentActivity() {
                 App(
                     modeController = modeController,
                     vitalsRepository = vitalsRepository,
+                    bleServiceState = bleServiceState,
                 )
             }
         }
@@ -137,15 +140,19 @@ class MainActivity : ComponentActivity() {
 private fun App(
     modeController: ModeController,
     vitalsRepository: VitalsRepository,
+    bleServiceState: State<BleService?>,
 ) {
     val currentMode by modeController.currentMode.collectAsState(initial = null)
     val streams by vitalsRepository.streams.collectAsState()
+    val bleService by bleServiceState
     val scope = rememberCoroutineScope()
+    var showPairingDialog by remember { mutableStateOf(false) }
 
     when (currentMode) {
-        null -> ModeSelectorScreen(onModeSelected = { picked ->
-            scope.launch { modeController.setMode(picked) }
-        })
+        null -> ModeSelectorScreen(
+            onModeSelected = { picked -> scope.launch { modeController.setMode(picked) } },
+            onPairWatchRequested = bleService?.let { { showPairingDialog = true } },
+        )
         AppMode.MEDIC_DASHBOARD -> MedicDashboardScreen(
             streams = streams,
             selfId = SELF_ID,
@@ -156,4 +163,41 @@ private fun App(
         AppMode.SINGLE_PAIRED -> SinglePairedScreen(stream = streams.values.firstOrNull())
         AppMode.RELAY -> RelayScreen(streams = streams, upstreamConnected = false)
     }
+
+    val svc = bleService
+    if (showPairingDialog && svc != null) {
+        PairingDialog(
+            scanner = svc.scanner,
+            onDeviceSelected = { scanned ->
+                val casualty = buildCasualtyFromScan(
+                    scanned = scanned,
+                    existingIds = streams.keys,
+                )
+                svc.pairAndConnect(casualty)
+                showPairingDialog = false
+            },
+            onDismiss = { showPairingDialog = false },
+        )
+    }
+}
+
+/** Build a placeholder Casualty from a scanned device. The medic can edit
+ *  name / age / MGRS / triage later (future feature). Auto-picks the next
+ *  unused CAS-NNNN ID starting from 148 (the seeded demo casualty is 147). */
+private fun buildCasualtyFromScan(
+    scanned: ScannedDevice,
+    existingIds: Collection<String>,
+): Casualty {
+    val nextIndex = existingIds
+        .mapNotNull { it.removePrefix("CAS-").toIntOrNull() }
+        .maxOrNull()?.plus(1) ?: 148
+    return Casualty(
+        id = "CAS-" + nextIndex.toString().padStart(4, '0'),
+        name = scanned.name ?: "Unknown",
+        age = 0,
+        mgrs = "--",
+        triage = Triage.IMMEDIATE,
+        watchDeviceAddress = scanned.mac,
+        openedAtMs = System.currentTimeMillis(),
+    )
 }

@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.gltech.guardianwatch.mode.AppMode
 import com.gltech.guardianwatch.ui.components.BrandMonogram
+import com.gltech.guardianwatch.ui.components.GhostButton
 import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
 import com.gltech.guardianwatch.ui.theme.GwTypography
@@ -20,6 +21,7 @@ import com.gltech.guardianwatch.ui.theme.GwTypography
 @Composable
 fun ModeSelectorScreen(
     onModeSelected: (AppMode) -> Unit,
+    onPairWatchRequested: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -54,6 +56,10 @@ fun ModeSelectorScreen(
             AppMode.entries.forEach { mode ->
                 ModeCard(mode = mode, onClick = { onModeSelected(mode) })
             }
+        }
+        if (onPairWatchRequested != null) {
+            Spacer(Modifier.height(32.dp))
+            GhostButton(label = "Pair Watch", onClick = onPairWatchRequested)
         }
     }
 }

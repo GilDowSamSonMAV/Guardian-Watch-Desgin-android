@@ -37,6 +37,10 @@ class BleService : LifecycleService() {
     private val managers = mutableMapOf<String, WatchBleManager>()   // key = MAC
     private val casualtiesByMac = mutableMapOf<String, String>()     // MAC -> casualtyId
 
+    /** Lazily-created BLE scanner. Held here so the service can supervise its
+     *  lifetime and callers don't each instantiate their own. */
+    val scanner: BleScanner by lazy { BleScanner(applicationContext) }
+
     inner class LocalBinder : Binder() {
         fun service(): BleService = this@BleService
     }
