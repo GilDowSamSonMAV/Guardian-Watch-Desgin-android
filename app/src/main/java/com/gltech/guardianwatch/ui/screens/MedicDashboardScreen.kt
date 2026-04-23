@@ -14,6 +14,7 @@ import com.gltech.guardianwatch.casualty.HealthTone
 import com.gltech.guardianwatch.casualty.Triage
 import com.gltech.guardianwatch.ui.components.*
 import com.gltech.guardianwatch.ui.theme.GwColors
+import com.gltech.guardianwatch.ui.theme.GwSpacing
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -60,7 +61,7 @@ fun MedicDashboardScreen(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(GwSpacing.sp4.dp),
             ) {
                 if (featured != null) {
                     val latest = featured.latest
@@ -73,7 +74,7 @@ fun MedicDashboardScreen(
                         chainSummary = "POI → MED → CASEVAC",
                         triage = featured.casualty.triage,
                     )
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(GwSpacing.sp4.dp))
 
                     // Critical banner when anomaly engine flags suspect.
                     if (assess?.overallTone == HealthTone.CRITICAL && assess.suspected != null) {
@@ -88,11 +89,11 @@ fun MedicDashboardScreen(
                             body = bodyText,
                             onAck = { showConfirm = true },
                         )
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(GwSpacing.sp4.dp))
                     }
 
                     // Vital tiles row — HR only on Instinct 2 (no SpO2/temp sensor).
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp)) {
                         VitalTile(
                             label = "HR",
                             value = (latest?.hrBpm ?: "--").toString(),
@@ -118,7 +119,7 @@ fun MedicDashboardScreen(
                             modifier = Modifier.weight(1f),
                         )
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(GwSpacing.sp4.dp))
 
                     BiometricChart(
                         title = "Heart Rate",
@@ -128,10 +129,10 @@ fun MedicDashboardScreen(
                         samples = featured.hrHistory,
                         timeLabel = "last 10 min",
                     )
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(GwSpacing.sp4.dp))
 
                     EvacTimeline()
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(GwSpacing.sp4.dp))
 
                     if (showConfirm) {
                         val handoffEvent = "HANDOFF → ROLE-2"
@@ -158,7 +159,7 @@ private fun EmptyState(message: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(48.dp),
+            .padding(GwSpacing.sp7.dp),
         contentAlignment = androidx.compose.ui.Alignment.Center,
     ) {
         androidx.compose.material3.Text(

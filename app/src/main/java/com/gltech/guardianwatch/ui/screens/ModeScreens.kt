@@ -11,6 +11,7 @@ import com.gltech.guardianwatch.ble.CasualtyStream
 import com.gltech.guardianwatch.casualty.HealthTone
 import com.gltech.guardianwatch.ui.components.*
 import com.gltech.guardianwatch.ui.theme.GwColors
+import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
 
 /**
@@ -27,7 +28,7 @@ fun SinglePairedScreen(
         modifier = modifier
             .fillMaxSize()
             .background(GwColors.bg000)
-            .padding(24.dp),
+            .padding(GwSpacing.sp5.dp),
     ) {
         if (stream == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -47,7 +48,7 @@ fun SinglePairedScreen(
             chainSummary = "OFFLINE · BUDDY-AID",
             triage = stream.casualty.triage,
         )
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(GwSpacing.sp5.dp))
 
         if (stream.assessment?.overallTone == HealthTone.CRITICAL && stream.assessment.suspected != null) {
             CriticalBanner(
@@ -55,11 +56,11 @@ fun SinglePairedScreen(
                 body = "HR ${stream.latest?.hrBpm ?: "--"} bpm",
                 onAck = {},
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(GwSpacing.sp4.dp))
         }
 
         // Oversized HR — readable at arm's length while treating casualty.
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp)) {
             VitalTile(
                 label = "HR",
                 value = (stream.latest?.hrBpm ?: "--").toString(),
@@ -78,7 +79,7 @@ fun SinglePairedScreen(
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(GwSpacing.sp4.dp))
         BiometricChart(
             title = "Heart Rate",
             latestValue = (stream.latest?.hrBpm ?: "--").toString(),
@@ -105,15 +106,15 @@ fun RelayScreen(
         modifier = modifier
             .fillMaxSize()
             .background(GwColors.bg000)
-            .padding(24.dp),
+            .padding(GwSpacing.sp5.dp),
     ) {
         Text("RELAY NODE", style = GwTypography.H1.copy(color = GwColors.fg000))
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(GwSpacing.sp1.dp))
         Text(
             "BLE → cellular bridge. Screen may be off; service runs in foreground.",
             style = GwTypography.Body.copy(color = GwColors.fg200),
         )
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(GwSpacing.sp5.dp))
 
         // Upstream status
         StatusRow(
@@ -121,22 +122,22 @@ fun RelayScreen(
             value = if (upstreamConnected) "CONNECTED" else "DISCONNECTED",
             tone = if (upstreamConnected) HealthTone.OK else HealthTone.CRITICAL,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(GwSpacing.sp2.dp))
         StatusRow(
             label = "PAIRED WATCHES",
             value = streams.size.toString(),
             tone = HealthTone.OK,
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(GwSpacing.sp4.dp))
 
         // Per-watch mini status
         streams.values.forEach { s ->
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = GwSpacing.sp1.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TriageGlyph(s.casualty.triage, size = 20)
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(GwSpacing.sp3.dp))
                 Text(
                     s.casualty.id,
                     style = GwTypography.Mono.copy(color = GwColors.fg000),
@@ -146,7 +147,7 @@ fun RelayScreen(
                     "HR ${s.latest?.hrBpm ?: "--"}",
                     style = GwTypography.MonoSm.copy(color = GwColors.fg200),
                 )
-                Spacer(Modifier.width(16.dp))
+                Spacer(Modifier.width(GwSpacing.sp4.dp))
                 Text(
                     "${s.latest?.rssiDbm ?: "--"} dBm",
                     style = GwTypography.MonoSm.copy(color = GwColors.fg300),
@@ -165,7 +166,7 @@ private fun StatusRow(label: String, value: String, tone: HealthTone) {
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(label, style = GwTypography.Label.copy(color = GwColors.fg200))
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
         Text(value, style = GwTypography.MonoLg.copy(color = valueColor))
     }
 }

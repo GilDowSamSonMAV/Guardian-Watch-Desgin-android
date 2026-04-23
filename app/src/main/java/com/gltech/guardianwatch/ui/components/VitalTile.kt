@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import com.gltech.guardianwatch.casualty.HealthTone
 import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
+import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
 
 @Composable
@@ -37,13 +38,13 @@ fun VitalTile(
             .clip(RoundedCornerShape(GwRadii.r2.dp))
             .background(bg)
             .border(1.dp, border, RoundedCornerShape(GwRadii.r2.dp))
-            .padding(16.dp),
+            .padding(GwSpacing.sp4.dp),
     ) {
         Text(
             text = label.uppercase(),
             style = GwTypography.Label.copy(color = GwColors.fg200),
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(GwSpacing.sp1.dp))
         Row(verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
             Text(
                 text = value,
@@ -53,7 +54,7 @@ fun VitalTile(
             Text(
                 text = unit,
                 style = GwTypography.MonoSm.copy(color = GwColors.fg300),
-                modifier = Modifier.padding(bottom = 8.dp),
+                modifier = Modifier.padding(bottom = GwSpacing.sp2.dp),
             )
         }
         Text(

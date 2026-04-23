@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.gltech.guardianwatch.casualty.Triage
 import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
+import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
 
 /** Critical alert banner — red rail, title, body, ACKNOWLEDGE button. */
@@ -39,12 +40,12 @@ fun CriticalBanner(
                 .fillMaxHeight()
                 .background(GwColors.critRed),
         )
-        Column(modifier = Modifier.weight(1f).padding(16.dp)) {
+        Column(modifier = Modifier.weight(1f).padding(GwSpacing.sp4.dp)) {
             Text(
                 text = title.uppercase(),
                 style = GwTypography.H2.copy(color = GwColors.fg000),
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(GwSpacing.sp1.dp))
             Text(
                 text = body,
                 style = GwTypography.Mono.copy(color = GwColors.fg100),
@@ -52,12 +53,12 @@ fun CriticalBanner(
         }
         Box(
             modifier = Modifier
-                .height(48.dp)
-                .padding(end = 16.dp)
+                .height(GwSpacing.sp7.dp)
+                .padding(end = GwSpacing.sp4.dp)
                 .clip(RoundedCornerShape(GwRadii.r1.dp))
                 .background(GwColors.critRed)
                 .clickable { onAck() }
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = GwSpacing.sp5.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -84,7 +85,7 @@ fun ConfirmBar(
             .clip(RoundedCornerShape(GwRadii.r2.dp))
             .background(GwColors.bg400)
             .border(1.dp, GwColors.strokeStrong, RoundedCornerShape(GwRadii.r2.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = GwSpacing.sp4.dp, vertical = GwSpacing.sp3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -97,7 +98,7 @@ fun ConfirmBar(
             modifier = Modifier.weight(1f),
         )
         GhostButton("Cancel", onClick = onCancel)
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(GwSpacing.sp2.dp))
         PrimaryButton(confirmText, onClick = onConfirm)
     }
 }
@@ -106,7 +107,7 @@ fun ConfirmBar(
 fun PrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .height(48.dp)
+            .height(GwSpacing.sp7.dp)
             .clip(RoundedCornerShape(GwRadii.r1.dp))
             .background(GwColors.chromeOlive500)
             .border(1.dp, GwColors.strokeStrong, RoundedCornerShape(GwRadii.r1.dp))
@@ -125,7 +126,7 @@ fun PrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modif
 fun GhostButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .height(48.dp)
+            .height(GwSpacing.sp7.dp)
             .clip(RoundedCornerShape(GwRadii.r1.dp))
             .background(Color.Transparent)
             .border(1.dp, GwColors.strokeDefault, RoundedCornerShape(GwRadii.r1.dp))
@@ -156,17 +157,17 @@ fun CasualtyHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TriageGlyph(triage, size = 40)
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = id,
                     style = GwTypography.MonoLg.copy(color = GwColors.fg000),
                 )
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(GwSpacing.sp3.dp))
                 TriageChip(triage)
             }
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(GwSpacing.sp1.dp))
             Text(
                 text = "$name · $age yr",
                 style = GwTypography.Body.copy(color = GwColors.fg100),
@@ -184,7 +185,7 @@ fun TriageGlyph(triage: Triage, size: Int = 24) {
     val (color, shape) = when (triage) {
         Triage.IMMEDIATE -> GwColors.triageImmediate to RoundedCornerShape(0.dp)  // square
         Triage.DELAYED -> GwColors.triageDelayed to RoundedCornerShape(0.dp)      // triangle (approx)
-        Triage.MINOR -> GwColors.triageMinor to RoundedCornerShape(4.dp)          // rounded
+        Triage.MINOR -> GwColors.triageMinor to RoundedCornerShape(GwSpacing.sp1.dp)          // rounded
         Triage.EXPECTANT -> GwColors.triageExpectant to RoundedCornerShape(size.dp / 2)  // circle
     }
     Box(
@@ -208,7 +209,7 @@ fun TriageChip(triage: Triage) {
         modifier = Modifier
             .clip(RoundedCornerShape(GwRadii.r1.dp))
             .background(bg)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = GwSpacing.sp2.dp, vertical = GwSpacing.sp1.dp),
     ) {
         Text(label, style = GwTypography.Label.copy(color = fg))
     }
@@ -229,7 +230,7 @@ fun EvacTimeline(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .background(GwColors.bg100)
             .border(1.dp, GwColors.strokeHairline)
-            .padding(16.dp),
+            .padding(GwSpacing.sp4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         nodes.forEach { TimelineDot(it) }

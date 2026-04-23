@@ -39,6 +39,7 @@ import com.gltech.guardianwatch.ble.ScanState
 import com.gltech.guardianwatch.ble.ScannedDevice
 import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
+import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
 
 /**
@@ -103,7 +104,7 @@ fun PairingDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(GwColors.bg200)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = GwSpacing.sp4.dp, vertical = GwSpacing.sp3.dp),
                 ) {
                     Text(
                         text = "PAIR WATCH",
@@ -116,14 +117,14 @@ fun PairingDialog(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(GwSpacing.sp4.dp),
                 ) {
                     StatusLine(
                         scanning = scanning,
                         resultCount = results.size,
                         error = error,
                     )
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(GwSpacing.sp3.dp))
                     ResultsList(
                         results = results,
                         scanning = scanning,
@@ -138,12 +139,12 @@ fun PairingDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(GwColors.bg200)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = GwSpacing.sp4.dp, vertical = GwSpacing.sp3.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End,
                 ) {
                     GhostButton(label = "Close", onClick = onDismiss)
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(GwSpacing.sp2.dp))
                     PrimaryButton(
                         label = if (scanning) "Scanning…" else "Rescan",
                         onClick = {
@@ -165,11 +166,11 @@ private fun StatusLine(
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (scanning && error == null) {
             CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(GwSpacing.sp4.dp),
                 color = GwColors.stateLive,
                 strokeWidth = 2.dp,
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(GwSpacing.sp2.dp))
         }
         val msg = when {
             error != null -> errorMessage(error)
@@ -241,17 +242,17 @@ private fun DeviceRow(device: ScannedDevice, onClick: () -> Unit) {
             .background(GwColors.bg200)
             .border(1.dp, GwColors.strokeDefault, RoundedCornerShape(GwRadii.r1.dp))
             .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = GwSpacing.sp3.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Signal bar indicator
         Box(
             modifier = Modifier
-                .width(4.dp)
+                .width(GwSpacing.sp1.dp)
                 .height(40.dp)
                 .background(signalColor),
         )
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -259,7 +260,7 @@ private fun DeviceRow(device: ScannedDevice, onClick: () -> Unit) {
                     style = GwTypography.MonoLg.copy(color = GwColors.fg000),
                 )
                 if (device.matchedGuardianService) {
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(GwSpacing.sp2.dp))
                     GuardianBadge()
                 }
             }
@@ -273,14 +274,14 @@ private fun DeviceRow(device: ScannedDevice, onClick: () -> Unit) {
             text = "${device.rssiDbm} dBm",
             style = GwTypography.MonoSm.copy(color = GwColors.fg200),
         )
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
         // "Tap to pair" chevron
         Box(
             modifier = Modifier
                 .height(40.dp)
                 .clip(RoundedCornerShape(GwRadii.r1.dp))
                 .background(GwColors.chromeOlive500)
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = GwSpacing.sp3.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(

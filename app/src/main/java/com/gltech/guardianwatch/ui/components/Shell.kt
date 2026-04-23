@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
+import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
 
 /** Top status bar with mission label, self-ID, BLE strength, battery, clock. */
@@ -33,23 +34,23 @@ fun TopBar(
             .border(1.dp, GwColors.strokeHairline),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
         // Brand monogram
         BrandMonogram(size = 20)
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(GwSpacing.sp4.dp))
         LabeledValue("Mission", missionLabel)
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(GwSpacing.sp4.dp))
         LabeledValue("Self", selfId)
         Spacer(Modifier.weight(1f))
         LabeledValue("BLE", "$bleRssi dBm", labelColor = GwColors.stateLive)
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
         LabeledValue("Batt", "$batteryPct%")
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(GwSpacing.sp4.dp))
         Text(
             text = timeStr,
             style = GwTypography.Mono.copy(color = GwColors.fg000),
         )
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
     }
 }
 
@@ -83,14 +84,14 @@ fun LeftNav(
             .border(1.dp, GwColors.strokeHairline),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(GwSpacing.sp3.dp))
         NavItem.entries.forEach { item ->
             NavButton(
                 label = item.label,
                 selected = item == selected,
                 onClick = { onSelect(item) },
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(GwSpacing.sp2.dp))
         }
     }
 }
@@ -108,7 +109,7 @@ private fun NavButton(label: String, selected: Boolean, onClick: () -> Unit) {
     val fg = if (selected) GwColors.fg000 else GwColors.fg200
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(GwSpacing.sp7.dp)
             .clip(RoundedCornerShape(GwRadii.r1.dp))
             .background(bg)
             .border(1.dp, GwColors.strokeHairline, RoundedCornerShape(GwRadii.r1.dp)),

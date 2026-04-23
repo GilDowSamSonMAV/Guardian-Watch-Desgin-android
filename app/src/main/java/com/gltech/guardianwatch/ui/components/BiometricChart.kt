@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.gltech.guardianwatch.casualty.HealthTone
 import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
+import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
 
 /**
@@ -53,7 +54,7 @@ fun BiometricChart(
             .clip(RoundedCornerShape(GwRadii.r2.dp))
             .background(GwColors.bg100)
             .border(1.dp, GwColors.strokeHairline, RoundedCornerShape(GwRadii.r2.dp))
-            .padding(12.dp),
+            .padding(GwSpacing.sp3.dp),
     ) {
         Row(
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
@@ -63,12 +64,12 @@ fun BiometricChart(
                 text = title.uppercase(),
                 style = GwTypography.Label.copy(color = GwColors.fg200),
             )
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(GwSpacing.sp3.dp))
             Text(
                 text = latestValue,
                 style = GwTypography.MonoLg.copy(color = traceColor),
             )
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(GwSpacing.sp1.dp))
             Text(
                 text = unit,
                 style = GwTypography.MonoSm.copy(color = GwColors.fg300),
@@ -79,7 +80,7 @@ fun BiometricChart(
                 style = GwTypography.MonoSm.copy(color = GwColors.fg300),
             )
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(GwSpacing.sp2.dp))
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()

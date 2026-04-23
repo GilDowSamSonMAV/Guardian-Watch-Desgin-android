@@ -16,6 +16,7 @@ import com.gltech.guardianwatch.ui.components.BrandMonogram
 import com.gltech.guardianwatch.ui.components.GhostButton
 import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
+import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
 
 @Composable
@@ -28,11 +29,11 @@ fun ModeSelectorScreen(
         modifier = modifier
             .fillMaxSize()
             .background(GwColors.bg000)
-            .padding(48.dp),
+            .padding(GwSpacing.sp7.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         BrandMonogram(size = 64)
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(GwSpacing.sp5.dp))
         Text(
             text = "GUARDIAN WATCH",
             style = GwTypography.H1.copy(color = GwColors.fg000),
@@ -41,24 +42,24 @@ fun ModeSelectorScreen(
             text = "TACTICAL HEALTH MONITORING",
             style = GwTypography.Label.copy(color = GwColors.fg200),
         )
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.height(GwSpacing.sp7.dp))
         Text(
             text = "SELECT OPERATING MODE",
             style = GwTypography.H2.copy(color = GwColors.fg000),
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(GwSpacing.sp2.dp))
         Text(
             text = "Mode persists until changed. Tap to select.",
             style = GwTypography.Body.copy(color = GwColors.fg200),
         )
-        Spacer(Modifier.height(32.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Spacer(Modifier.height(GwSpacing.sp6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp)) {
             AppMode.entries.forEach { mode ->
                 ModeCard(mode = mode, onClick = { onModeSelected(mode) })
             }
         }
         if (onPairWatchRequested != null) {
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(GwSpacing.sp6.dp))
             GhostButton(label = "Pair Watch", onClick = onPairWatchRequested)
         }
     }
@@ -74,13 +75,13 @@ private fun ModeCard(mode: AppMode, onClick: () -> Unit) {
             .background(GwColors.bg200)
             .border(1.dp, GwColors.strokeDefault, RoundedCornerShape(GwRadii.r2.dp))
             .clickable { onClick() }
-            .padding(24.dp),
+            .padding(GwSpacing.sp5.dp),
     ) {
         Text(
             text = mode.displayName,
             style = GwTypography.H2.copy(color = GwColors.fg000),
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(GwSpacing.sp4.dp))
         Text(
             text = mode.description,
             style = GwTypography.Body.copy(color = GwColors.fg100),
