@@ -27,6 +27,7 @@ import com.gltech.guardianwatch.mode.AppMode
 import com.gltech.guardianwatch.mode.ModeController
 import com.gltech.guardianwatch.ui.components.PairingDialog
 import com.gltech.guardianwatch.ui.screens.*
+import com.gltech.guardianwatch.ui.screens.TacticalDashboard
 import com.gltech.guardianwatch.ui.theme.GuardianWatchTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -72,6 +73,15 @@ class MainActivity : ComponentActivity() {
 
         modeController = ModeController(this)
         kioskController = KioskController(this)
+
+        // Auto-select Medic Dashboard on first launch (MVP default mode).
+        lifecycleScope.launch {
+            modeController.currentMode.collect { mode ->
+                if (mode == null) {
+                    modeController.setMode(com.gltech.guardianwatch.mode.AppMode.MEDIC_DASHBOARD)
+                }
+            }
+        }
 
         // Request permissions on first boot — required before BLE service starts.
         requestRuntimePermissions()
@@ -153,13 +163,7 @@ private fun App(
             onModeSelected = { picked -> scope.launch { modeController.setMode(picked) } },
             onPairWatchRequested = bleService?.let { { showPairingDialog = true } },
         )
-        AppMode.MEDIC_DASHBOARD -> MedicDashboardScreen(
-            streams = streams,
-            selfId = SELF_ID,
-            onHandoffConfirmed = { casualtyId, event ->
-                vitalsRepository.appendAudit(casualtyId, event, SELF_ID)
-            },
-        )
+        AppMode.MEDIC_DASHBOARD -> TacticalDashboard()
         AppMode.SINGLE_PAIRED -> SinglePairedScreen(stream = streams.values.firstOrNull())
         AppMode.RELAY -> RelayScreen(streams = streams, upstreamConnected = false)
     }
