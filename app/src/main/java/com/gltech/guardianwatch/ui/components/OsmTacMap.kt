@@ -69,9 +69,19 @@ fun OsmTacMap(
     // MapView lifecycle
     val mapView = remember {
         MapView(context).apply {
+            layoutParams = android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+            )
+
             // ── TILE SOURCE ───────────────────────────────────────────────────
-            // USGS World Imagery = free satellite tiles (no key)
-            setTileSource(TileSourceFactory.USGS_SAT)
+            // Esri World Imagery = free global high-res satellite (USGS only covers the USA!)
+            val esri = org.osmdroid.tileprovider.tilesource.XYTileSource(
+                "EsriWorldImagery",
+                0, 19, 256, ".jpg",
+                arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/")
+            )
+            setTileSource(esri)
 
             // ── MAP SETTINGS ──────────────────────────────────────────────────
             setMultiTouchControls(true)
