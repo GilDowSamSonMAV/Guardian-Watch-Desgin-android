@@ -112,6 +112,31 @@ fun OsmTacMap(
         // Close any open info windows
         InfoWindow.closeAllInfoWindowsOn(mapView)
 
+        val density = context.resources.displayMetrics.density
+
+        // 1. Draw Tactical Routes (Tzirim)
+        val routes = buildTacticalRoutes(centerLat, centerLon)
+        routes.forEach { route ->
+            // Draw the route line
+            val line = Polyline(mapView).apply {
+                setPoints(route.points)
+                outlinePaint.color = route.color
+                outlinePaint.strokeWidth = 4f * density
+                outlinePaint.alpha = 180
+            }
+            mapView.overlays.add(line)
+
+            // Draw the route name label
+            val labelMarker = Marker(mapView).apply {
+                position = route.points[1] // Place label near the middle point
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                icon = buildTextIcon(context, route.name, density, route.color)
+                setOnMarkerClickListener { _, _ -> true } // Consume clicks, do nothing
+            }
+            mapView.overlays.add(labelMarker)
+        }
+
+        // 2. Draw Soldiers
         val allSoldiers = DemoData.allSoldiers()
 
         allSoldiers.forEach { soldier ->
@@ -262,5 +287,79 @@ private fun buildSoldierIcon(
     }
     canvas.drawCircle(cx, cy, dotRadius, borderPaint)
 
+    return android.graphics.drawable.BitmapDrawable(context.resources, bmp)
+}
+
+// ─── Route Helpers ────────────────────────────────────────────────────────────
+
+private data class RouteData(val name: String, val points: List<GeoPoint>, val color: Int)
+
+private fun buildTacticalRoutes(centerLat: Double, centerLon: Double): List<RouteData> {
+    return listOf(
+        RouteData("ROUTE AKAVISH", listOf(
+            GeoPoint(centerLat + 0.008, centerLon - 0.006),
+            GeoPoint(centerLat + 0.003, centerLon - 0.002),
+            GeoPoint(centerLat - 0.002, centerLon - 0.001),
+            GeoPoint(centerLat - 0.007, centerLon + 0.004)
+        ), android.graphics.Color.parseColor("#EABF3A")), // Yellow warning
+
+        RouteData("ROUTE LEX", listOf(
+            GeoPoint(centerLat + 0.005, centerLon + 0.007),
+            GeoPoint(centerLat + 0.001, centerLon + 0.003),
+            GeoPoint(centerLat - 0.001, centerLon - 0.004),
+            GeoPoint(centerLat - 0.004, centerLon - 0.008)
+        ), android.graphics.Color.parseColor("#EE343B")), // Red critical
+
+        RouteData("ROUTE SHAKED", listOf(
+            GeoPoint(centerLat - 0.005, centerLon - 0.005),
+            GeoPoint(centerLat - 0.004, centerLon + 0.000),
+            GeoPoint(centerLat - 0.005, centerLon + 0.005),
+            GeoPoint(centerLat - 0.008, centerLon + 0.009)
+        ), android.graphics.Color.parseColor("#43AFC1"))  // Cyan info
+    )
+}
+
+private fun buildTextIcon(
+    context: android.content.Context, 
+    text: String, 
+    density: Float, 
+    borderColor: Int
+): android.graphics.drawable.BitmapDrawable {
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.WHITE
+        textSize = 11f * density
+        typeface = android.graphics.Typeface.DEFAULT_BOLD
+    }
+    val textWidth = paint.measureText(text)
+    val textHeight = paint.fontMetrics.descent - paint.fontMetrics.ascent
+    
+    val paddingX = 8f * density
+    val paddingY = 4f * density
+    
+    val width = (textWidth + paddingX * 2).toInt()
+    val height = (textHeight + paddingY * 2).toInt()
+    
+    val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bmp)
+    
+    val rect = android.graphics.RectF(0f, 0f, width.toFloat(), height.toFloat())
+    
+    // Background pill (dark)
+    val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.argb(220, 12, 8, 6)
+    }
+    canvas.drawRoundRect(rect, 4f * density, 4f * density, bgPaint)
+    
+    // Colored Border
+    val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = borderColor
+        style = Paint.Style.STROKE
+        strokeWidth = 2f * density
+    }
+    canvas.drawRoundRect(rect, 4f * density, 4f * density, borderPaint)
+    
+    // Text
+    canvas.drawText(text, paddingX, height - paddingY - paint.fontMetrics.descent, paint)
+    
     return android.graphics.drawable.BitmapDrawable(context.resources, bmp)
 }
