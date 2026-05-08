@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -166,7 +167,7 @@ fun OsmTacMap(
 
     AndroidView(
         factory  = { mapView },
-        modifier = modifier.androidx.compose.ui.draw.clipToBounds(),
+        modifier = modifier.clipToBounds(),
         update   = { /* handled by DisposableEffect */ },
     )
 
