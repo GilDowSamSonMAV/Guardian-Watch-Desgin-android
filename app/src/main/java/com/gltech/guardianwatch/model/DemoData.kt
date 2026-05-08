@@ -58,6 +58,7 @@ object DemoData {
 
     val COMPANY: Company
     val ACTIVE_ALERTS: List<CriticalAlert>
+    var CRITICAL_ALERT: CriticalAlert? = null   // set in init after ACTIVE_ALERTS is built
 
     init {
         nameIdx = 0
@@ -194,8 +195,6 @@ object DemoData {
         // Legacy single-alert for backward compat
         CRITICAL_ALERT = ACTIVE_ALERTS.firstOrNull()
     }
-
-    var CRITICAL_ALERT: CriticalAlert? = null
 
     fun allSoldiers(): List<Soldier> =
         COMPANY.platoons.flatMap { p -> p.squads.flatMap { it.soldiers } }

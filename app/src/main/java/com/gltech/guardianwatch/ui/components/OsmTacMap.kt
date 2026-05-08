@@ -18,7 +18,6 @@ import com.gltech.guardianwatch.model.SoldierStatus
 import com.gltech.guardianwatch.ui.theme.GwColors
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -79,17 +78,6 @@ fun OsmTacMap(
             isTilesScaledToDpi = true
             isHorizontalMapRepetitionEnabled = false
             isVerticalMapRepetitionEnabled   = false
-            setScrollableAreaLimitLatitude(
-                BoundingBox.computeFromGeoPoints(
-                    listOf(GeoPoint(centerLat + 0.05, centerLon - 0.05),
-                           GeoPoint(centerLat - 0.05, centerLon + 0.05))
-                ).latNorth,
-                BoundingBox.computeFromGeoPoints(
-                    listOf(GeoPoint(centerLat + 0.05, centerLon - 0.05),
-                           GeoPoint(centerLat - 0.05, centerLon + 0.05))
-                ).latSouth,
-                0.0,
-            )
             minZoomLevel = 12.0
             maxZoomLevel = 20.0
 
