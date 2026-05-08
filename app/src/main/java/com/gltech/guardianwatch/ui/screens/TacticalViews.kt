@@ -18,16 +18,37 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gltech.guardianwatch.model.Company
+import com.gltech.guardianwatch.model.DemoData
 import com.gltech.guardianwatch.model.Platoon
 import com.gltech.guardianwatch.model.Soldier
 import com.gltech.guardianwatch.model.SoldierRole
 import com.gltech.guardianwatch.model.SoldierStatus
 import com.gltech.guardianwatch.model.Squad
+import com.gltech.guardianwatch.model.SimulationEngine
 import com.gltech.guardianwatch.ui.components.SoldierCard
 import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
 import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Helper: apply live simulation vitals to a soldier
+// ──────────────────────────────────────────────────────────────────────────────
+
+private fun effectiveSoldier(s: Soldier, simulation: SimulationEngine?): Soldier {
+    if (simulation == null || !simulation.isRunning) return s
+    val lv = simulation.liveVitals[s.id] ?: return s
+    return s.copy(
+        hr = lv.hr,
+        br = lv.br,
+        spo2 = lv.spo2,
+        coreTemp = lv.coreTemp,
+        risk = lv.risk,
+        status = lv.status,
+        lastUpdateSec = lv.lastUpdateSec,
+        batteryPct = lv.batteryPct,
+    )
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // COMPANY VIEW — 3 platoon cards side-by-side
@@ -37,38 +58,52 @@ import com.gltech.guardianwatch.ui.theme.GwTypography
 fun CompanyView(
     company: Company,
     onPickPlatoon: (String) -> Unit,
+    simulation: SimulationEngine? = null,
     modifier: Modifier = Modifier,
 ) {
     val allSoldiers = company.platoons.flatMap { p -> p.squads.flatMap { s -> s.soldiers } }
+        .map { effectiveSoldier(it, simulation) }
     val counts = statusCounts(allSoldiers)
 
     Column(modifier = modifier.fillMaxSize()) {
         ViewMeta(
             label  = "COMPANY OVERVIEW",
-            sub    = "${company.platoons.size} PLATOONS · ${allSoldiers.size} PERSONNEL",
+            sub    = "${company.platoons.size} PLATOONS",
             total  = allSoldiers.size,
             counts = counts,
         )
-        Spacer(Modifier.height(GwSpacing.sp4.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp),
-            modifier = Modifier.fillMaxWidth().weight(1f),
-        ) {
-            company.platoons.forEach { platoon ->
-                PlatoonCard(
-                    platoon  = platoon,
-                    onClick  = { onPickPlatoon(platoon.id) },
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                )
+        Spacer(Modifier.height(GwSpacing.sp3.dp))
+        // Platoon cards — wrap in rows of 3
+        val rows = company.platoons.chunked(3)
+        rows.forEach { row ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                row.forEach { platoon ->
+                    PlatoonCard(
+                        platoon    = platoon,
+                        onClick    = { onPickPlatoon(platoon.id) },
+                        simulation = simulation,
+                        // ★ NO fillMaxHeight — card height = content height only
+                        modifier   = Modifier.weight(1f),
+                    )
+                }
+                // pad last row if fewer than 3
+                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
             }
+            if (rows.size > 1) Spacer(Modifier.height(GwSpacing.sp4.dp))
         }
     }
 }
 
 @Composable
-private fun PlatoonCard(platoon: Platoon, onClick: () -> Unit, modifier: Modifier) {
-    val soldiers    = platoon.squads.flatMap { it.soldiers }
+private fun PlatoonCard(
+    platoon: Platoon, onClick: () -> Unit,
+    simulation: SimulationEngine?,
+    modifier: Modifier,
+) {
+    val soldiers    = platoon.squads.flatMap { it.soldiers }.map { effectiveSoldier(it, simulation) }
     val hasAlert    = soldiers.any { it.status == SoldierStatus.CRITICAL }
     val borderColor = if (hasAlert) GwColors.critRed else GwColors.strokeHairline
     val counts      = statusCounts(soldiers)
@@ -78,56 +113,56 @@ private fun PlatoonCard(platoon: Platoon, onClick: () -> Unit, modifier: Modifie
             .clip(RoundedCornerShape(GwRadii.r2.dp))
             .background(GwColors.bg200)
             .border(if (hasAlert) 1.5.dp else 1.dp, borderColor, RoundedCornerShape(GwRadii.r2.dp))
-            // ★ entire card is now clickable
             .clickable { onClick() }
             .padding(GwSpacing.sp4.dp),
+        // ★ wrapContentHeight — border only wraps actual content
     ) {
         // ── Header ───────────────────────────────────────────────
-        Text(
-            text      = platoon.callsign,
-            style     = GwTypography.Audit.copy(color = GwColors.fg300),
-            maxLines  = 1,
-            overflow  = TextOverflow.Ellipsis,
-        )
-        Text(
-            text      = platoon.name,
-            style     = GwTypography.Label.copy(color = GwColors.fg000, fontSize = 18.sp),
-            maxLines  = 1,                        // ★ no more vertical text
-            overflow  = TextOverflow.Ellipsis,
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            text      = platoon.sector,
-            style     = GwTypography.Audit.copy(color = GwColors.fg300),
-            maxLines  = 1,
-            overflow  = TextOverflow.Ellipsis,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text      = platoon.callsign,
+                    style     = GwTypography.Audit.copy(color = GwColors.fg300),
+                    maxLines  = 1,
+                    overflow  = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text      = platoon.name,
+                    style     = GwTypography.Label.copy(color = GwColors.fg000, fontSize = 16.sp),
+                    maxLines  = 1,
+                    overflow  = TextOverflow.Ellipsis,
+                )
+            }
+            Text(
+                text = "${soldiers.size}",
+                style = GwTypography.MonoLg.copy(color = GwColors.fg200),
+            )
+        }
 
-        Spacer(Modifier.height(GwSpacing.sp3.dp))
+        Spacer(Modifier.height(GwSpacing.sp2.dp))
 
-        // ── Soldier tile grid (3 rows of 8) ─────────────────────
-        // Using plain Column+Row so NO LazyVerticalGrid steals touch events
+        // ── Soldier tile grid ─────────────────────
         platoon.squads.forEach { squad ->
-            val squadHasAlert = squad.soldiers.any { it.status == SoldierStatus.CRITICAL }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    .padding(vertical = 1.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 squad.soldiers.forEach { s ->
+                    val eff = effectiveSoldier(s, simulation)
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .aspectRatio(1f)
+                            .aspectRatio(1.2f)
                             .clip(RoundedCornerShape(2.dp))
-                            .background(s.status.color.copy(alpha = 0.85f))
+                            .background(eff.status.color.copy(alpha = 0.85f))
                     )
                 }
             }
         }
 
-        Spacer(Modifier.height(GwSpacing.sp3.dp))
+        Spacer(Modifier.height(GwSpacing.sp2.dp))
 
         // ── Footer: counts + open hint ───────────────────────────
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -149,9 +184,10 @@ private fun PlatoonCard(platoon: Platoon, onClick: () -> Unit, modifier: Modifie
 fun PlatoonView(
     platoon: Platoon,
     onPickSquad: (String) -> Unit,
+    simulation: SimulationEngine? = null,
     modifier: Modifier = Modifier,
 ) {
-    val allSoldiers = platoon.squads.flatMap { it.soldiers }
+    val allSoldiers = platoon.squads.flatMap { it.soldiers }.map { effectiveSoldier(it, simulation) }
     val counts      = statusCounts(allSoldiers)
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -161,28 +197,40 @@ fun PlatoonView(
             total  = allSoldiers.size,
             counts = counts,
         )
-        Spacer(Modifier.height(GwSpacing.sp4.dp))
+        Spacer(Modifier.height(GwSpacing.sp3.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp),
-            modifier = Modifier.fillMaxWidth().weight(1f),
-        ) {
-            platoon.squads.forEach { squad ->
-                SquadCard(
-                    squad    = squad,
-                    onClick  = { onPickSquad(squad.id) },   // ★ passes squad.id up
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                )
+        // Platoon view: 2-column grid for up to 4 squads
+        val squadRows = platoon.squads.chunked(2)
+        squadRows.forEach { pair ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                pair.forEach { squad ->
+                    SquadCard(
+                        squad      = squad,
+                        onClick    = { onPickSquad(squad.id) },
+                        simulation = simulation,
+                        modifier   = Modifier.weight(1f),   // ★ NO fillMaxHeight
+                    )
+                }
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
             }
+            Spacer(Modifier.height(GwSpacing.sp4.dp))
         }
     }
 }
 
 @Composable
-private fun SquadCard(squad: Squad, onClick: () -> Unit, modifier: Modifier) {
-    val hasAlert    = squad.soldiers.any { it.status == SoldierStatus.CRITICAL }
+private fun SquadCard(
+    squad: Squad, onClick: () -> Unit,
+    simulation: SimulationEngine?,
+    modifier: Modifier,
+) {
+    val soldiers    = squad.soldiers.map { effectiveSoldier(it, simulation) }
+    val hasAlert    = soldiers.any { it.status == SoldierStatus.CRITICAL }
     val borderColor = if (hasAlert) GwColors.critRed else GwColors.strokeHairline
-    val counts      = statusCounts(squad.soldiers)
+    val counts      = statusCounts(soldiers)
     val tl          = squad.soldiers.firstOrNull { it.role == SoldierRole.TL }
 
     Column(
@@ -190,9 +238,8 @@ private fun SquadCard(squad: Squad, onClick: () -> Unit, modifier: Modifier) {
             .clip(RoundedCornerShape(GwRadii.r2.dp))
             .background(GwColors.bg200)
             .border(if (hasAlert) 1.5.dp else 1.dp, borderColor, RoundedCornerShape(GwRadii.r2.dp))
-            // ★ entire card is clickable — no LazyGrid in the way
             .clickable { onClick() }
-            .padding(GwSpacing.sp4.dp),
+            .padding(GwSpacing.sp3.dp),
     ) {
         // ── Header ───────────────────────────────────────────────
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -210,25 +257,25 @@ private fun SquadCard(squad: Squad, onClick: () -> Unit, modifier: Modifier) {
         }
         Text(
             text     = squad.name,
-            style    = GwTypography.Label.copy(color = GwColors.fg000, fontSize = 20.sp),
-            maxLines = 1,           // ★ no more vertical text
+            style    = GwTypography.Label.copy(color = GwColors.fg000, fontSize = 18.sp),
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
 
-        Spacer(Modifier.height(GwSpacing.sp3.dp))
+        Spacer(Modifier.height(GwSpacing.sp2.dp))
 
-        // ── 2 rows × 4 soldiers tile grid (no LazyGrid!) ────────
-        val rows = squad.soldiers.chunked(4)
+        // ── 2 rows × 4 soldiers tile grid ────────
+        val rows = soldiers.chunked(4)
         rows.forEach { rowSoldiers ->
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 3.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 rowSoldiers.forEach { s ->
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(20.dp)
+                            .height(18.dp)
                             .clip(RoundedCornerShape(2.dp))
                             .background(s.status.color.copy(alpha = 0.85f))
                     )
@@ -240,7 +287,7 @@ private fun SquadCard(squad: Squad, onClick: () -> Unit, modifier: Modifier) {
             }
         }
 
-        Spacer(Modifier.height(GwSpacing.sp3.dp))
+        Spacer(Modifier.height(GwSpacing.sp2.dp))
 
         // ── Footer ───────────────────────────────────────────────
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -260,32 +307,33 @@ fun SquadView(
     squad: Squad,
     onPickSoldier: (String) -> Unit,
     selectedId: String?,
+    simulation: SimulationEngine? = null,
     modifier: Modifier = Modifier,
 ) {
-    val counts = statusCounts(squad.soldiers)
+    val soldiers = squad.soldiers.map { effectiveSoldier(it, simulation) }
+    val counts = statusCounts(soldiers)
 
     Column(modifier = modifier.fillMaxSize()) {
         ViewMeta(
             label  = "Squad ${squad.name}",
-            sub    = "SQD ${squad.id} · ${squad.soldiers.size} SOLDIERS",
-            total  = squad.soldiers.size,
+            sub    = "SQD ${squad.id}",
+            total  = soldiers.size,
             counts = counts,
         )
-        Spacer(Modifier.height(GwSpacing.sp4.dp))
+        Spacer(Modifier.height(GwSpacing.sp3.dp))
 
-        // Split 8 soldiers into 4 pairs, render each pair as a Row
-        // This avoids LazyVerticalGrid touch-stealing completely
-        val rows = squad.soldiers.chunked(2)
+        // Split soldiers into pairs, render each pair as a Row
+        val rows = soldiers.chunked(2)
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp),
+            verticalArrangement = Arrangement.spacedBy(GwSpacing.sp3.dp),
         ) {
             rows.forEach { pair ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp3.dp),
                 ) {
                     pair.forEach { soldier ->
                         SoldierCard(
@@ -390,13 +438,13 @@ fun ViewMeta(label: String, sub: String, total: Int, counts: StatusCounts) {
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        Spacer(Modifier.width(GwSpacing.sp4.dp))
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 total.toString(),
                 style = GwTypography.MonoXl.copy(color = GwColors.fg000),
             )
-            Spacer(Modifier.width(GwSpacing.sp3.dp))
+            Spacer(Modifier.width(GwSpacing.sp2.dp))
             Column {
                 Text("PERSONNEL", style = GwTypography.Audit.copy(color = GwColors.fg300))
                 StatusCountRow(counts)
@@ -404,3 +452,218 @@ fun ViewMeta(label: String, sub: String, total: Int, counts: StatusCounts) {
         }
     }
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// CASUALTIES / TRIAGE BOARD — all WIA across all units in one place
+// ──────────────────────────────────────────────────────────────────────────────
+
+@Composable
+fun CasualtiesView(
+    simulation: SimulationEngine? = null,
+    onPickSoldier: (String) -> Unit,
+    onCasevac: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val wounded = DemoData.allWounded()
+    val critCount = wounded.count { it.third.status == SoldierStatus.CRITICAL }
+    val highCount = wounded.count { it.third.status == SoldierStatus.HIGH }
+    val cautCount = wounded.count { it.third.status == SoldierStatus.CAUTION }
+
+    Column(modifier = modifier.fillMaxSize()) {
+        // ── Header ────────────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("TRIAGE BOARD", style = GwTypography.H2.copy(color = GwColors.fg000))
+                Text("ALL WOUNDED · SORTED BY SEVERITY",
+                    style = GwTypography.Audit.copy(color = GwColors.fg300))
+            }
+            // Count badges
+            SeverityBadge("CRIT", critCount, GwColors.critRed)
+            Spacer(Modifier.width(GwSpacing.sp2.dp))
+            SeverityBadge("HIGH", highCount, SoldierStatus.HIGH.color)
+            Spacer(Modifier.width(GwSpacing.sp2.dp))
+            SeverityBadge("CAUT", cautCount, SoldierStatus.CAUTION.color)
+            Spacer(Modifier.width(GwSpacing.sp2.dp))
+            SeverityBadge("TOTAL", wounded.size, GwColors.fg200)
+        }
+
+        Spacer(Modifier.height(GwSpacing.sp3.dp))
+
+        if (wounded.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("✓", style = GwTypography.H1.copy(color = GwColors.stateLive, fontSize = 48.sp))
+                    Text("ALL PERSONNEL NOMINAL",
+                        style = GwTypography.Label.copy(color = GwColors.stateLive))
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(GwSpacing.sp2.dp),
+            ) {
+                wounded.forEach { (platoon, squad, rawSoldier) ->
+                    val s = effectiveSoldier(rawSoldier, simulation)
+                    CasualtyRow(
+                        soldier   = s,
+                        platoonName = platoon.name,
+                        squadName   = squad.name,
+                        onView    = { onPickSoldier(s.id) },
+                        onCasevac = { onCasevac(s.id) },
+                    )
+                }
+                Spacer(Modifier.height(GwSpacing.sp4.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CasualtyRow(
+    soldier: Soldier,
+    platoonName: String,
+    squadName: String,
+    onView: () -> Unit,
+    onCasevac: () -> Unit,
+) {
+    val statusColor = soldier.status.color
+    val isCritical  = soldier.status == SoldierStatus.CRITICAL
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(GwRadii.r2.dp))
+            .background(if (isCritical) GwColors.critRedBg else GwColors.bg200)
+            .border(
+                if (isCritical) 1.5.dp else 1.dp,
+                if (isCritical) GwColors.critRed else GwColors.strokeHairline,
+                RoundedCornerShape(GwRadii.r2.dp),
+            )
+            .clickable { onView() }
+            .padding(horizontal = GwSpacing.sp4.dp, vertical = GwSpacing.sp3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Status indicator strip
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(40.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(statusColor),
+        )
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
+
+        // Status badge
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(GwRadii.r1.dp))
+                .background(statusColor.copy(alpha = 0.15f))
+                .border(1.dp, statusColor, RoundedCornerShape(GwRadii.r1.dp))
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+        ) {
+            Text(soldier.status.label,
+                style = GwTypography.Audit.copy(color = statusColor, fontSize = 10.sp))
+        }
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
+
+        // Identity
+        Column(modifier = Modifier.width(130.dp)) {
+            Text(
+                "POS-${soldier.pos.toString().padStart(2,'0')} ${soldier.last}",
+                style = GwTypography.Label.copy(color = GwColors.fg000),
+                maxLines = 1,
+            )
+            Text(
+                "${soldier.role.display} · ${soldier.id}",
+                style = GwTypography.Audit.copy(color = GwColors.fg300),
+            )
+        }
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
+
+        // Unit path
+        Column(modifier = Modifier.width(140.dp)) {
+            Text(platoonName, style = GwTypography.Audit.copy(color = GwColors.fg300), maxLines = 1)
+            Text(squadName,   style = GwTypography.MonoSm.copy(color = GwColors.fg200), maxLines = 1)
+        }
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
+
+        // Vitals
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp),
+        ) {
+            TriageVital("HR",   soldier.hr.toString(), "bpm",
+                if (soldier.hr > 140) GwColors.critRed else GwColors.fg000)
+            TriageVital("BR",   soldier.br.toString(), "rpm",
+                if (soldier.br > 22) GwColors.warnAmber else GwColors.fg000)
+            TriageVital("SpO₂", if (soldier.spo2 > 0) "${soldier.spo2}%" else "--", "",
+                if (soldier.spo2 in 1..91) GwColors.critRed else GwColors.fg000)
+            TriageVital("RISK", String.format("%.1f", soldier.risk), "/10", statusColor)
+        }
+
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
+
+        // Actions
+        ActionChip("VIEW", GwColors.bg300, GwColors.strokeDefault, GwColors.fg000, onView)
+        if (isCritical) {
+            Spacer(Modifier.width(GwSpacing.sp2.dp))
+            ActionChip("CASEVAC", GwColors.critRedBg, GwColors.critRed, GwColors.fg000, onCasevac)
+        }
+    }
+}
+
+@Composable
+private fun TriageVital(label: String, value: String, unit: String, color: Color) {
+    Column {
+        Text(label, style = GwTypography.Audit.copy(color = GwColors.fg400, fontSize = 9.sp))
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(value, style = GwTypography.MonoSm.copy(color = color))
+            if (unit.isNotEmpty()) {
+                Spacer(Modifier.width(1.dp))
+                Text(unit, style = GwTypography.Audit.copy(color = GwColors.fg400, fontSize = 9.sp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionChip(label: String, bg: Color, border: Color, fg: Color, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .height(28.dp)
+            .clip(RoundedCornerShape(GwRadii.r1.dp))
+            .background(bg)
+            .border(1.dp, border, RoundedCornerShape(GwRadii.r1.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, style = GwTypography.Audit.copy(color = fg, fontSize = 10.sp))
+    }
+}
+
+@Composable
+private fun SeverityBadge(label: String, count: Int, color: Color) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(GwRadii.r1.dp))
+            .background(color.copy(alpha = 0.12f))
+            .border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(GwRadii.r1.dp))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("$count", style = GwTypography.MonoSm.copy(color = color))
+            Spacer(Modifier.width(3.dp))
+            Text(label, style = GwTypography.Audit.copy(color = color, fontSize = 9.sp))
+        }
+    }
+}
+

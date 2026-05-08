@@ -201,16 +201,26 @@ fun GlobalAlertBanner(
     onCasevac: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Pulsing background animation for CRITICAL
+    // ★ AGGRESSIVE: fast pulse 350ms, strong alpha swing 0.45→1.0
     val infiniteTransition = rememberInfiniteTransition(label = "alertPulse")
     val pulse by infiniteTransition.animateFloat(
-        initialValue = 0.85f,
+        initialValue = 0.45f,
         targetValue  = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation  = tween(durationMillis = 800),
+            animation  = tween(durationMillis = 350, easing = androidx.compose.animation.core.FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
         ),
         label = "pulseAlpha",
+    )
+    // Second counter-phase animation for border flicker
+    val borderPulse by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue  = 0.3f,
+        animationSpec = infiniteRepeatable(
+            animation  = tween(durationMillis = 250),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "borderPulse",
     )
 
     val bgColor = Color(0xFF3D0507).copy(alpha = pulse)
@@ -220,7 +230,7 @@ fun GlobalAlertBanner(
             .fillMaxWidth()
             .height(38.dp)
             .background(bgColor)
-            .border(width = 1.dp, color = GwColors.critRed),
+            .border(width = (1.5 * borderPulse).dp, color = GwColors.critRed),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Left accent rail

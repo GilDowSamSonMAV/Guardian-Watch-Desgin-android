@@ -1,202 +1,225 @@
 package com.gltech.guardianwatch.model
 
-import kotlin.math.abs
-import kotlin.random.Random
-
-/**
- * Demo data seeded from the reference data.jsx file.
- * All 3 platoons × 3 squads × 8 soldiers = 72 personnel, matching the reference exactly.
- * Used for demo/MVP. BLE live data overrides individual soldiers' hr field at runtime.
- */
 object DemoData {
 
-    // Random seed for repeatable demo
-    private val rng = Random(42)
+    // ── IDF STRUCTURE ─────────────────────────────────────────────────────────
+    // Golani Brigade · 13th Battalion · Aleph Company
+    // 3 platoons (מחלקות) × 4 squads (כיתות) × 8 soldiers = 96 personnel
+
+    private val names = listOf(
+        "COHEN","LEVI","MIZRAHI","PERETZ","KATZ","AVRAHAM","TZUR","DAYAN",
+        "SHAPIRO","BARAK","GOLAN","NAVON","AMIR","OFER","HAIM","IDAN",
+        "YARDEN","PELED","ROEE","EYAL","ARIEL","CARMI","BINYAMIN","NOAM",
+        "MATAN","TIROSH","ARNON","LAVY","MAOR","ALON","GUY","RAN",
+        "ORI","ITAI","AYALON","EGOZ","FEINER","GIDEON","LIDOR","OMRI",
+        "TAMARI","UZIEL","WOLF","YANIV","VIDAL","ZAMIR","ROSH","SADE",
+        "DRORI","HAREL","GALOR","NIR","TAL","OZ","PAZ","BAR",
+        "EDEN","YOAV","DOTAN","MOKED","SAAR","SARID","ERAN","GIORA",
+        "ZOHAR","BOREN","AGMON","DORI","ARAD","AMIT","AMOS","NEVO",
+        "PARDO","RAZ","SAGIV","TOMER","UZAN","VERED","GABI","TAMIR",
+        "SNIR","RONEN","KOBI","LIRON","NATAN","EFRAT","GALIL","ASSAF",
+        "BITON","HADAD","NACHUM","YITZHAK","SHLOMO","MOSHE","YOSEF","YAIR",
+    )
+    private var nameIdx = 0
+    private fun nextName() = names[nameIdx++ % names.size]
 
     private fun soldier(
-        squadId: String,
-        pos: Int,
-        last: String,
-        role: SoldierRole,
+        squadId: String, pos: Int, role: SoldierRole,
         status: SoldierStatus = SoldierStatus.OK,
-        hr: Int = 70 + abs(rng.nextInt()) % 20,
-        br: Int = 13 + abs(rng.nextInt()) % 4,
-        spo2: Int = 96 + abs(rng.nextInt()) % 3,
-        coreTemp: Float = (367 + abs(rng.nextInt()) % 4) / 10f,
-        risk: Float = ((abs(rng.nextInt()) % 15 + 4) / 10f),
-        battery: Int = 70 + abs(rng.nextInt()) % 25,
-        signal: MeshSignal = if (rng.nextFloat() > 0.15f) MeshSignal.STRONG else MeshSignal.WEAK,
-        lastUpdate: Int = abs(rng.nextInt()) % 40,
+        hr: Int = (62..88).random(),
+        br: Int = (13..18).random(),
+        spo2: Int = (97..99).random(),
+        coreTemp: Float = ((365..372).random() / 10f),
+        risk: Float = ((8..25).random() / 10f),
+        battery: Int = (60..95).random(),
+        signal: MeshSignal = if ((1..10).random() > 2) MeshSignal.STRONG else MeshSignal.WEAK,
+        lastUpdate: Int = (2..35).random(),
     ) = Soldier(
-        id = "$squadId-${pos.toString().padStart(2, '0')}",
-        pos = pos,
-        last = last,
-        role = role,
-        squadId = squadId,
-        hr = hr,
-        br = br,
-        spo2 = spo2,
-        coreTemp = coreTemp,
-        risk = risk,
-        status = status,
-        batteryPct = battery,
-        meshSignal = signal,
-        lastUpdateSec = lastUpdate,
+        id = "$squadId-${pos.toString().padStart(2,'0')}",
+        pos = pos, last = nextName(), role = role, squadId = squadId,
+        hr = hr, br = br, spo2 = spo2, coreTemp = coreTemp,
+        risk = risk, status = status, batteryPct = battery,
+        meshSignal = signal, lastUpdateSec = lastUpdate,
     )
 
-    val COMPANY = Company(
-        id = "ALEPH",
-        callsign = "ALEPH-6",
-        name = "Aleph Company",
-        platoons = listOf(
-            // ── PLATOON 1 ───────────────────────────────────────────────────
-            Platoon(
-                id = "PLT-1", name = "Platoon 1", callsign = "ALEPH-1",
-                sector = "GRID 18S TJ 4421 8896",
-                squads = listOf(
-                    Squad("1A", "Alpha", "PLT-1", listOf(
-                        soldier("1A", 1, "AMAR",   SoldierRole.TL),
-                        soldier("1A", 2, "DAGAN",  SoldierRole.RIF),
-                        soldier("1A", 3, "OREN",   SoldierRole.MED),
-                        soldier("1A", 4, "TAL",    SoldierRole.RTO),
-                        soldier("1A", 5, "ELIAS",  SoldierRole.SAW),
-                        soldier("1A", 6, "BENI",   SoldierRole.M203),
-                        soldier("1A", 7, "ROZEN",  SoldierRole.RIF),
-                        soldier("1A", 8, "KATZ",   SoldierRole.RIF),
-                    )),
-                    Squad("1B", "Bravo", "PLT-1", listOf(
-                        soldier("1B", 1, "ALMOG",  SoldierRole.TL),
-                        soldier("1B", 2, "GAL",    SoldierRole.RIF),
-                        soldier("1B", 3, "HADAR",  SoldierRole.MED),
-                        soldier("1B", 4, "VARDI",  SoldierRole.RTO),
-                        soldier("1B", 5, "ZAKEN",  SoldierRole.SAW,
-                            status = SoldierStatus.CAUTION, hr = 128, br = 22, risk = 4.1f),
-                        soldier("1B", 6, "HIRSH",  SoldierRole.M203),
-                        soldier("1B", 7, "SADEH",  SoldierRole.RIF),
-                        soldier("1B", 8, "PELED",  SoldierRole.RIF),
-                    )),
-                    Squad("1C", "Charlie", "PLT-1", listOf(
-                        soldier("1C", 1, "AVITAL", SoldierRole.TL),
-                        soldier("1C", 2, "BARAM",  SoldierRole.RIF),
-                        soldier("1C", 3, "GINOSAR",SoldierRole.MED),
-                        soldier("1C", 4, "DAYAN",  SoldierRole.RTO),
-                        soldier("1C", 5, "EITAN",  SoldierRole.SAW),
-                        soldier("1C", 6, "FRIED",  SoldierRole.M203),
-                        soldier("1C", 7, "GUTMAN", SoldierRole.RIF),
-                        soldier("1C", 8, "HERZL",  SoldierRole.DM),
-                    )),
-                )
-            ),
-            // ── PLATOON 2 ───────────────────────────────────────────────────
-            Platoon(
-                id = "PLT-2", name = "Platoon 2", callsign = "ALEPH-2",
-                sector = "GRID 18S TJ 4486 8741",
-                squads = listOf(
-                    Squad("2A", "Delta", "PLT-2", listOf(
-                        soldier("2A", 1, "RAVID",  SoldierRole.TL),
-                        soldier("2A", 2, "LEVI",   SoldierRole.RIF,
-                            status   = SoldierStatus.CRITICAL,
-                            hr       = 187, br = 30,
-                            spo2     = 88,  coreTemp = 38.4f,
-                            risk     = 8.8f,
-                            battery  = 83,  signal   = MeshSignal.STRONG,
-                            lastUpdate = 12,
-                        ),
-                        soldier("2A", 3, "COHEN",  SoldierRole.MED),
-                        soldier("2A", 4, "BARAK",  SoldierRole.RTO),
-                        soldier("2A", 5, "SHANI",  SoldierRole.SAW,
-                            status = SoldierStatus.CAUTION, hr = 134, br = 24, risk = 4.6f),
-                        soldier("2A", 6, "AMIR",   SoldierRole.M203),
-                        soldier("2A", 7, "GOLAN",  SoldierRole.RIF),
-                        soldier("2A", 8, "PERETZ", SoldierRole.RIF,
-                            status = SoldierStatus.HIGH, hr = 152, br = 26, risk = 6.2f),
-                    )),
-                    Squad("2B", "Echo", "PLT-2", listOf(
-                        soldier("2B", 1, "MIZRAHI",SoldierRole.TL),
-                        soldier("2B", 2, "NIR",    SoldierRole.RIF),
-                        soldier("2B", 3, "OZ",     SoldierRole.MED),
-                        soldier("2B", 4, "PINI",   SoldierRole.RTO),
-                        soldier("2B", 5, "RAZ",    SoldierRole.SAW),
-                        soldier("2B", 6, "SAGI",   SoldierRole.M203),
-                        soldier("2B", 7, "TALMI",  SoldierRole.RIF),
-                        soldier("2B", 8, "URI",    SoldierRole.RIF,
-                            status = SoldierStatus.OFFLINE, risk = 0f,
-                            lastUpdate = 252, signal = MeshSignal.NONE),
-                    )),
-                    Squad("2C", "Foxtrot", "PLT-2", listOf(
-                        soldier("2C", 1, "YAARI",  SoldierRole.TL),
-                        soldier("2C", 2, "ZAITSEV",SoldierRole.RIF),
-                        soldier("2C", 3, "ARIEL",  SoldierRole.MED),
-                        soldier("2C", 4, "BACHAR", SoldierRole.RTO),
-                        soldier("2C", 5, "CARMI",  SoldierRole.SAW),
-                        soldier("2C", 6, "DRORI",  SoldierRole.M203),
-                        soldier("2C", 7, "EZRA",   SoldierRole.RIF),
-                        soldier("2C", 8, "FELDMAN",SoldierRole.DM),
-                    )),
-                )
-            ),
-            // ── PLATOON 3 ───────────────────────────────────────────────────
-            Platoon(
-                id = "PLT-3", name = "Platoon 3", callsign = "ALEPH-3",
-                sector = "GRID 18S TJ 4538 8804",
-                squads = listOf(
-                    Squad("3A", "Golf", "PLT-3", listOf(
-                        soldier("3A", 1, "GAVRIEL",SoldierRole.TL),
-                        soldier("3A", 2, "HAREL",  SoldierRole.RIF),
-                        soldier("3A", 3, "ITAMAR", SoldierRole.MED),
-                        soldier("3A", 4, "JONAH",  SoldierRole.RTO),
-                        soldier("3A", 5, "KEDEM",  SoldierRole.SAW),
-                        soldier("3A", 6, "LAVI",   SoldierRole.M203),
-                        soldier("3A", 7, "MOR",    SoldierRole.RIF),
-                        soldier("3A", 8, "NAVON",  SoldierRole.RIF),
-                    )),
-                    Squad("3B", "Hotel", "PLT-3", listOf(
-                        soldier("3B", 1, "OFER",   SoldierRole.TL),
-                        soldier("3B", 2, "PAZ",    SoldierRole.RIF),
-                        soldier("3B", 3, "RIVKA",  SoldierRole.MED),
-                        soldier("3B", 4, "SHEMER", SoldierRole.RTO),
-                        soldier("3B", 5, "TZUR",   SoldierRole.SAW),
-                        soldier("3B", 6, "URIEL",  SoldierRole.M203),
-                        soldier("3B", 7, "VEXLER", SoldierRole.RIF),
-                        soldier("3B", 8, "WERNER", SoldierRole.RIF,
-                            status = SoldierStatus.CAUTION, hr = 121, risk = 3.7f),
-                    )),
-                    Squad("3C", "India", "PLT-3", listOf(
-                        soldier("3C", 1, "YAHALOM",SoldierRole.TL),
-                        soldier("3C", 2, "ZADOK",  SoldierRole.RIF),
-                        soldier("3C", 3, "ALON",   SoldierRole.MED),
-                        soldier("3C", 4, "BEN-AMI",SoldierRole.RTO),
-                        soldier("3C", 5, "CARMEL", SoldierRole.SAW),
-                        soldier("3C", 6, "DORI",   SoldierRole.M203),
-                        soldier("3C", 7, "EYAL",   SoldierRole.RIF),
-                        soldier("3C", 8, "FAYAD",  SoldierRole.DM),
-                    )),
-                )
-            ),
+    private fun mkSquad(platoonId: String, squadSuffix: String, squadName: String): Squad {
+        val sid = "$platoonId$squadSuffix"
+        return Squad(sid, squadName, platoonId, listOf(
+            soldier(sid, 1, SoldierRole.TL),
+            soldier(sid, 2, SoldierRole.RIF),
+            soldier(sid, 3, SoldierRole.MED),
+            soldier(sid, 4, SoldierRole.RTO),
+            soldier(sid, 5, SoldierRole.SAW),
+            soldier(sid, 6, SoldierRole.M203),
+            soldier(sid, 7, SoldierRole.RIF),
+            soldier(sid, 8, SoldierRole.DM),
+        ))
+    }
+
+    val COMPANY: Company
+    val ACTIVE_ALERTS: List<CriticalAlert>
+
+    init {
+        nameIdx = 0
+
+        // ── PLATOON 1 — Machlaka Aleph ────────────────────────────────────────
+        val sq1A = mkSquad("1", "A", "Kita Aleph")
+        val sq1B = run {
+            val sid = "1B"
+            Squad(sid, "Kita Bet", "1", listOf(
+                soldier(sid,1,SoldierRole.TL),
+                soldier(sid,2,SoldierRole.RIF,
+                    status=SoldierStatus.CAUTION, hr=128, br=22, risk=3.8f),
+                soldier(sid,3,SoldierRole.MED),
+                soldier(sid,4,SoldierRole.RTO),
+                soldier(sid,5,SoldierRole.SAW),
+                soldier(sid,6,SoldierRole.M203,
+                    status=SoldierStatus.HIGH, hr=155, br=26, risk=6.4f),
+                soldier(sid,7,SoldierRole.RIF),
+                soldier(sid,8,SoldierRole.DM),
+            ))
+        }
+        val sq1C = mkSquad("1", "C", "Kita Gimel")
+        val sq1D = mkSquad("1", "D", "Kita Dalet")
+
+        val plt1 = Platoon("PLT-1","1st Machlaka","GOLANI-1",
+            "GRID 18S TJ 4421 8896", listOf(sq1A,sq1B,sq1C,sq1D))
+
+        // ── PLATOON 2 — Machlaka Bet ──────────────────────────────────────────
+        val sq2A = run {
+            val sid = "2A"
+            Squad(sid,"Kita Aleph","2", listOf(
+                soldier(sid,1,SoldierRole.TL),
+                soldier(sid,2,SoldierRole.RIF,        // ★ CRITICAL
+                    status=SoldierStatus.CRITICAL, hr=187, br=30,
+                    spo2=88, coreTemp=38.4f, risk=8.8f,
+                    battery=83, signal=MeshSignal.STRONG, lastUpdate=12),
+                soldier(sid,3,SoldierRole.MED),
+                soldier(sid,4,SoldierRole.RTO),
+                soldier(sid,5,SoldierRole.SAW,
+                    status=SoldierStatus.HIGH, hr=158, br=27, risk=6.7f),
+                soldier(sid,6,SoldierRole.M203),
+                soldier(sid,7,SoldierRole.RIF),
+                soldier(sid,8,SoldierRole.DM,
+                    status=SoldierStatus.CAUTION, hr=132, br=23, risk=4.1f),
+            ))
+        }
+        val sq2B = run {
+            val sid = "2B"
+            Squad(sid,"Kita Bet","2", listOf(
+                soldier(sid,1,SoldierRole.TL),
+                soldier(sid,2,SoldierRole.RIF,        // ★ CRITICAL
+                    status=SoldierStatus.CRITICAL, hr=194, br=32,
+                    spo2=85, coreTemp=38.8f, risk=9.2f,
+                    battery=71, signal=MeshSignal.STRONG, lastUpdate=5),
+                soldier(sid,3,SoldierRole.MED),
+                soldier(sid,4,SoldierRole.RTO,
+                    status=SoldierStatus.HIGH, hr=152, br=25, risk=6.1f),
+                soldier(sid,5,SoldierRole.SAW),
+                soldier(sid,6,SoldierRole.M203),
+                soldier(sid,7,SoldierRole.RIF,
+                    status=SoldierStatus.OFFLINE, risk=0f,
+                    lastUpdate=280, signal=MeshSignal.NONE),
+                soldier(sid,8,SoldierRole.DM),
+            ))
+        }
+        val sq2C = mkSquad("2","C","Kita Gimel")
+        val sq2D = run {
+            val sid = "2D"
+            Squad(sid,"Kita Dalet","2", listOf(
+                soldier(sid,1,SoldierRole.TL),
+                soldier(sid,2,SoldierRole.RIF,
+                    status=SoldierStatus.CAUTION, hr=120, risk=3.3f),
+                soldier(sid,3,SoldierRole.MED),
+                soldier(sid,4,SoldierRole.RTO),
+                soldier(sid,5,SoldierRole.SAW,
+                    status=SoldierStatus.CRITICAL, hr=178, br=29,
+                    spo2=90, coreTemp=38.2f, risk=8.1f,
+                    battery=66, signal=MeshSignal.WEAK, lastUpdate=18),
+                soldier(sid,6,SoldierRole.M203),
+                soldier(sid,7,SoldierRole.RIF),
+                soldier(sid,8,SoldierRole.DM),
+            ))
+        }
+        val plt2 = Platoon("PLT-2","2nd Machlaka","GOLANI-2",
+            "GRID 18S TJ 4486 8741", listOf(sq2A,sq2B,sq2C,sq2D))
+
+        // ── PLATOON 3 — Machlaka Gimel ────────────────────────────────────────
+        val sq3A = mkSquad("3","A","Kita Aleph")
+        val sq3B = run {
+            val sid = "3B"
+            Squad(sid,"Kita Bet","3", listOf(
+                soldier(sid,1,SoldierRole.TL),
+                soldier(sid,2,SoldierRole.RIF,
+                    status=SoldierStatus.CAUTION, hr=118, risk=3.5f),
+                soldier(sid,3,SoldierRole.MED),
+                soldier(sid,4,SoldierRole.RTO),
+                soldier(sid,5,SoldierRole.SAW,
+                    status=SoldierStatus.HIGH, hr=148, br=24, risk=5.8f),
+                soldier(sid,6,SoldierRole.M203),
+                soldier(sid,7,SoldierRole.RIF),
+                soldier(sid,8,SoldierRole.DM),
+            ))
+        }
+        val sq3C = mkSquad("3","C","Kita Gimel")
+        val sq3D = mkSquad("3","D","Kita Dalet")
+
+        val plt3 = Platoon("PLT-3","3rd Machlaka","GOLANI-3",
+            "GRID 18S TJ 4538 8804", listOf(sq3A,sq3B,sq3C,sq3D))
+
+        COMPANY = Company(
+            id       = "GOLANI-13A",
+            callsign = "GOLANI-6",
+            name     = "Golani · 13th Btn · Aleph Coy",
+            platoons = listOf(plt1, plt2, plt3),
         )
-    )
 
-    val CRITICAL_ALERT = CriticalAlert(
-        soldierId    = "2A-02",
-        type         = "VITALS",
-        message      = "TACHYCARDIA · POSSIBLE HEMORRHAGE",
-        triggeredSec = 12,
-        acknowledged = false,
-    )
+        // ── Build alerts from all CRITICAL soldiers ───────────────────────────
+        ACTIVE_ALERTS = COMPANY.platoons
+            .flatMap { p -> p.squads.flatMap { s -> s.soldiers } }
+            .filter { it.status == SoldierStatus.CRITICAL }
+            .mapIndexed { i, s ->
+                CriticalAlert(
+                    soldierId    = s.id,
+                    type         = "VITALS",
+                    message      = when {
+                        s.spo2 < 90 -> "TACHYCARDIA · HYPOXIA · HEMORRHAGE"
+                        s.hr  > 180 -> "SEVERE TACHYCARDIA · HEMORRHAGE RISK"
+                        else        -> "TACHYCARDIA · VITALS CRITICAL"
+                    },
+                    triggeredSec = (i + 1) * 12,
+                )
+            }
 
-    // ── Convenience helpers ──────────────────────────────────────────────────
+        // Legacy single-alert for backward compat
+        CRITICAL_ALERT = ACTIVE_ALERTS.firstOrNull()
+    }
+
+    var CRITICAL_ALERT: CriticalAlert? = null
 
     fun allSoldiers(): List<Soldier> =
-        COMPANY.platoons.flatMap { p -> p.squads.flatMap { s -> s.soldiers } }
+        COMPANY.platoons.flatMap { p -> p.squads.flatMap { it.soldiers } }
 
-    fun findSoldier(id: String): Soldier? = allSoldiers().firstOrNull { it.id == id }
+    fun findSoldier(id: String) = allSoldiers().firstOrNull { it.id == id }
+    fun findSquad(id: String)   = COMPANY.platoons.flatMap { it.squads }.firstOrNull { it.id == id }
+    fun findPlatoon(id: String) = COMPANY.platoons.firstOrNull { it.id == id }
+    fun soldierSquadId(sid: String) =
+        COMPANY.platoons.flatMap { it.squads }.firstOrNull { sq -> sq.soldiers.any { it.id == sid } }?.id
 
-    fun findSquad(id: String): Squad? =
-        COMPANY.platoons.flatMap { it.squads }.firstOrNull { it.id == id }
+    /** All wounded (CRITICAL + HIGH + CAUTION), sorted by severity. */
+    fun allWounded(): List<Triple<Platoon, Squad, Soldier>> =
+        COMPANY.platoons.flatMap { plt ->
+            plt.squads.flatMap { sq ->
+                sq.soldiers
+                    .filter { it.status in listOf(SoldierStatus.CRITICAL, SoldierStatus.HIGH, SoldierStatus.CAUTION) }
+                    .map { Triple(plt, sq, it) }
+            }
+        }.sortedBy { severityRank(it.third.status) }
 
-    fun findPlatoon(id: String): Platoon? = COMPANY.platoons.firstOrNull { it.id == id }
-
-    fun soldierSquadId(soldierId: String): String? =
-        COMPANY.platoons.flatMap { it.squads }
-            .firstOrNull { sq -> sq.soldiers.any { it.id == soldierId } }?.id
+    private fun severityRank(s: SoldierStatus) = when(s) {
+        SoldierStatus.CRITICAL -> 0
+        SoldierStatus.HIGH     -> 1
+        SoldierStatus.CAUTION  -> 2
+        else                   -> 3
+    }
 }
