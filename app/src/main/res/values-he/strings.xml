@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Guardian Watch</string>
+    <string name="kiosk_admin_label">Guardian Watch Kiosk</string>
+    <string name="kiosk_admin_description">נדרש עבור מצב עמדה בשטח: מונע יציאה בטעות במהלך טיפול בפצוע.</string>
+
+    <!-- Mode selection -->
+    <string name="mode_select_title">בחר מצב פעולה</string>
+    <string name="mode_select_subtitle">המצב נשמר עד לשינוי יזום.</string>
+
+    <!-- BLE -->
+    <string name="ble_service_notif_title">Guardian Watch — פעיל</string>
+    <string name="ble_service_notif_body">משדר מדדים מ־%1$d שעונים.</string>
+    <string name="ble_service_channel">הזרמת מדדים</string>
+
+    <!-- Permissions -->
+    <string name="perm_rationale_ble">Guardian Watch זקוק לגישה לבלוטות\' כדי לקבל מדדים משעוני הפצועים.</string>
+
+    <!-- Critical banner -->
+    <string name="critical_hemorrhage">קריטי — חשד לדימום מסיבי</string>
+    <string name="acknowledge">אשר</string>
+
+    <!-- Tactical Dashboard UI -->
+    <string name="company_overview">תמונת מצב פלוגתית</string>
+    <string name="platoons_count">%1$d מחלקות</string>
+    <string name="personnel">חיילים</string>
+    <string name="squad_title">כיתה %1$s</string>
+    <string name="squad_short">כיתה %1$s</string>
+    <string name="wia">פצועים</string>
+    <string name="triage_board">לוח פצועים</string>
+    <string name="triage_subtitle">כל הפצועים · ממוינים לפי חומרה</string>
+    <string name="total">סה״כ</string>
+    <string name="all_nominal">כל החיילים כשירים</string>
+    <string name="view">צפה</string>
+    <string name="open_action">פתח</string>
+    <string name="casevac">פינוי</string>
+    <string name="simulate">הפעל הדמיה</string>
+    
+    <!-- Statuses -->
+    <string name="status_ok">תקין</string>
+    <string name="status_caut">אזהרה</string>
+    <string name="status_high">גבוה</string>
+    <string name="status_crit">קריטי</string>
+    <string name="status_critical">קריטי</string>
+    <string name="status_offline">מנותק</string>
+    
+    <!-- Roles -->
+    <string name="role_tl">מ״כ</string>
+    <string name="role_med">חובש</string>
+    <string name="role_rto">קשר</string>
+    <string name="role_saw">קלע</string>
+    <string name="role_rif">רובאי</string>
+    <string name="role_m203">מטול</string>
+    
+    <!-- Top Bar -->
+    <string name="medcom">חפ״ק רפואה</string>
+    <string name="satcom">לוויין</string>
+    <string name="mesh">רשת</string>
+    <string name="telemed">רפואה מרחוק</string>
+    <string name="gps">GPS</string>
+    <string name="hi_prec">דיוק גבוה</string>
+    <string name="lock">נעול</string>
+    <string name="off">מנותק</string>
+    <string name="on">פעיל</string>
+    <string name="op_name">מבצע רוח צפונית</string>
+    <string name="day_plus">ד+3</string>
+</resources>
