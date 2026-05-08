@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gltech.guardianwatch.ui.components.BrandMonogram
 import com.gltech.guardianwatch.model.CriticalAlert
 import com.gltech.guardianwatch.model.Soldier
@@ -68,7 +69,7 @@ fun TacticalTopBar(
         Column {
             Text(
                 text = missionLabel,
-                style = GwTypography.Label.copy(color = GwColors.fg000, fontSize = androidx.compose.ui.unit.sp(13f)),
+                style = GwTypography.Label.copy(color = GwColors.fg000, fontSize = 13.sp),
             )
             Text(
                 text = opLabel,
@@ -290,7 +291,7 @@ private fun AlertActionButton(label: String, bg: Color, onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Text(label, style = GwTypography.Label.copy(color = GwColors.fg000,
-            fontSize = androidx.compose.ui.unit.sp(12f)))
+            fontSize = 12.sp))
     }
 }
 
