@@ -173,9 +173,9 @@ fun OsmTacMap(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** IDF Training Area, Tze'elim, Negev — change to your real AO center */
-const val DEFAULT_LAT = 31.2481
-const val DEFAULT_LON = 34.5180
+/** AO: Khiam area, South Lebanon — 33.3451°N, 35.6124°E */
+const val DEFAULT_LAT = 33.3451
+const val DEFAULT_LON = 35.6124
 
 /**
  * Scatter 96 demo soldiers in a ~600m × 600m grid around the center.
