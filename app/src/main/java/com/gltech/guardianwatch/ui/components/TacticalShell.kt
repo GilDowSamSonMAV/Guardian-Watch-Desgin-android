@@ -28,6 +28,8 @@ import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
 import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
+import androidx.compose.ui.res.stringResource
+import com.gltech.guardianwatch.R
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TOP BAR — Cleaner, less dense. Single horizontal strip.
@@ -80,16 +82,16 @@ fun TacticalTopBar(
         Spacer(Modifier.weight(1f))
 
         // Status pills — compact inline
-        StatusPill("SATCOM", if (status.satcomLocked) "LOCK" else "—",
+        StatusPill(stringResource(R.string.satcom), if (status.satcomLocked) stringResource(R.string.lock) else "—",
             if (status.satcomLocked) GwColors.stateLive else GwColors.critRed)
         Spacer(Modifier.width(GwSpacing.sp2.dp))
-        StatusPill("MESH", "${status.meshConnected}/${status.meshTotal}",
+        StatusPill(stringResource(R.string.mesh), "${status.meshConnected}/${status.meshTotal}",
             GwColors.stateLive)
         Spacer(Modifier.width(GwSpacing.sp2.dp))
-        StatusPill("TELEMED", if (status.telemedOnline) "ON" else "OFF",
+        StatusPill(stringResource(R.string.telemed), if (status.telemedOnline) stringResource(R.string.on) else stringResource(R.string.off),
             if (status.telemedOnline) GwColors.stateLive else GwColors.stateStale)
         Spacer(Modifier.width(GwSpacing.sp2.dp))
-        StatusPill("GPS", status.gpsMode, GwColors.stateLive)
+        StatusPill(stringResource(R.string.gps), status.gpsMode, GwColors.stateLive)
 
         Spacer(Modifier.width(GwSpacing.sp4.dp))
 
@@ -253,7 +255,7 @@ fun GlobalAlertBanner(
                 .background(GwColors.critRed)
                 .padding(horizontal = 5.dp, vertical = 1.dp),
         ) {
-            Text("CRITICAL", style = GwTypography.Label.copy(color = GwColors.fg000, fontSize = 10.sp))
+            Text(stringResource(R.string.status_critical), style = GwTypography.Label.copy(color = GwColors.fg000, fontSize = 10.sp))
         }
         Spacer(Modifier.width(GwSpacing.sp2.dp))
 
@@ -297,11 +299,11 @@ fun GlobalAlertBanner(
         }
 
         // Action buttons
-        AlertActionButton("VIEW", Color(0xFF1A3040), onClick = onView)
+        AlertActionButton(stringResource(R.string.view), Color(0xFF1A3040), onClick = onView)
         Spacer(Modifier.width(GwSpacing.sp1.dp))
-        AlertActionButton("ACK",  Color(0xFF2A1E0A), onClick = onAck)
+        AlertActionButton(stringResource(R.string.acknowledge),  Color(0xFF2A1E0A), onClick = onAck)
         Spacer(Modifier.width(GwSpacing.sp1.dp))
-        AlertActionButton("CASEVAC", GwColors.critRed, onClick = onCasevac)
+        AlertActionButton(stringResource(R.string.casevac), GwColors.critRed, onClick = onCasevac)
         Spacer(Modifier.width(GwSpacing.sp2.dp))
     }
 }
@@ -399,7 +401,7 @@ fun FootStatusBar(
             .padding(horizontal = GwSpacing.sp3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        FootCell("MESH", "$meshOnline/$meshTotal")
+        FootCell(stringResource(R.string.mesh), "$meshOnline/$meshTotal")
         FootCell("LAT", "142ms")
         FootCell("DATA", "2.4 KB/s")
         Spacer(Modifier.weight(1f))

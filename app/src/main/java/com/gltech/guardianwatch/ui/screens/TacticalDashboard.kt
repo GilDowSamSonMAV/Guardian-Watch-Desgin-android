@@ -24,6 +24,8 @@ import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.res.stringResource
+import com.gltech.guardianwatch.R
 import kotlin.random.Random
 import kotlinx.coroutines.delay
 
@@ -212,8 +214,8 @@ fun TacticalDashboard(
 
         // TOP BAR
         TacticalTopBar(
-            missionLabel = "MEDCOM · ${company.callsign}",
-            opLabel      = "OP NORTH WIND · D+3",
+            missionLabel = "${stringResource(R.string.medcom)} · ${company.callsign}",
+            opLabel      = "${stringResource(R.string.op_name)} · ${stringResource(R.string.day_plus)}",
             timeStr      = time,
             status       = SystemStatus(
                 meshConnected = meshOnline,
@@ -323,8 +325,8 @@ fun TacticalDashboard(
                             .padding(horizontal = 8.dp, vertical = 3.dp),
                     ) {
                         Text(
-                            text = if (critCount > 0) "⚠ WIA ×$woundedCount  CRIT ×$critCount"
-                                   else "WIA ×$woundedCount",
+                            text = if (critCount > 0) "⚠ ${stringResource(R.string.wia)} ×$woundedCount  ${stringResource(R.string.status_crit)} ×$critCount"
+                                   else "${stringResource(R.string.wia)} ×$woundedCount",
                             style = GwTypography.Audit.copy(
                                 color = if (critCount > 0 || wiaActive) GwColors.fg000 else GwColors.fg200,
                                 fontSize = 10.sp,
@@ -515,7 +517,7 @@ private fun SimulationButton(isRunning: Boolean, onToggle: () -> Unit) {
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                text = if (isRunning) "■  STOP SIM" else "▶  SIMULATE",
+                text = if (isRunning) "■  עצור הדמיה" else "▶  ${stringResource(R.string.simulate)}",
                 style = GwTypography.Label.copy(
                     color = labelColor,
                     fontSize = 11.sp,

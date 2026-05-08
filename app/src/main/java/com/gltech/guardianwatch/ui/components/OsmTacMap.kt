@@ -296,21 +296,21 @@ private data class RouteData(val name: String, val points: List<GeoPoint>, val c
 
 private fun buildTacticalRoutes(centerLat: Double, centerLon: Double): List<RouteData> {
     return listOf(
-        RouteData("ROUTE AKAVISH", listOf(
+        RouteData("ציר עכביש", listOf(
             GeoPoint(centerLat + 0.008, centerLon - 0.006),
             GeoPoint(centerLat + 0.003, centerLon - 0.002),
             GeoPoint(centerLat - 0.002, centerLon - 0.001),
             GeoPoint(centerLat - 0.007, centerLon + 0.004)
         ), android.graphics.Color.parseColor("#EABF3A")), // Yellow warning
 
-        RouteData("ROUTE LEX", listOf(
+        RouteData("ציר לקס", listOf(
             GeoPoint(centerLat + 0.005, centerLon + 0.007),
             GeoPoint(centerLat + 0.001, centerLon + 0.003),
             GeoPoint(centerLat - 0.001, centerLon - 0.004),
             GeoPoint(centerLat - 0.004, centerLon - 0.008)
         ), android.graphics.Color.parseColor("#EE343B")), // Red critical
 
-        RouteData("ROUTE SHAKED", listOf(
+        RouteData("ציר שקד", listOf(
             GeoPoint(centerLat - 0.005, centerLon - 0.005),
             GeoPoint(centerLat - 0.004, centerLon + 0.000),
             GeoPoint(centerLat - 0.005, centerLon + 0.005),

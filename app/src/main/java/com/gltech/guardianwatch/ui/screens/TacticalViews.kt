@@ -30,6 +30,8 @@ import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
 import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
+import androidx.compose.ui.res.stringResource
+import com.gltech.guardianwatch.R
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helper: apply live simulation vitals to a soldier
@@ -67,8 +69,8 @@ fun CompanyView(
 
     Column(modifier = modifier.fillMaxSize()) {
         ViewMeta(
-            label  = "COMPANY OVERVIEW",
-            sub    = "${company.platoons.size} PLATOONS",
+            label  = stringResource(R.string.company_overview),
+            sub    = stringResource(R.string.platoons_count, company.platoons.size),
             total  = allSoldiers.size,
             counts = counts,
         )
@@ -169,7 +171,7 @@ private fun PlatoonCard(
             StatusCountRow(counts)
             Spacer(Modifier.weight(1f))
             Text(
-                "OPEN ▶",
+                "${stringResource(R.string.open_action)} ◀",
                 style = GwTypography.Audit.copy(color = GwColors.infoCyan),
             )
         }
@@ -244,13 +246,13 @@ private fun SquadCard(
         // ── Header ───────────────────────────────────────────────
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "SQD · ${squad.id}",
+                stringResource(R.string.squad_short, squad.id),
                 style    = GwTypography.Audit.copy(color = GwColors.fg300),
                 maxLines = 1,
             )
             Spacer(Modifier.weight(1f))
             if (tl != null) {
-                Text("TL ", style = GwTypography.Audit.copy(color = GwColors.fg300))
+                Text(stringResource(R.string.role_tl) + " ", style = GwTypography.Audit.copy(color = GwColors.fg300))
                 Text(tl.last, style = GwTypography.Audit.copy(color = GwColors.fg200),
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
@@ -293,7 +295,7 @@ private fun SquadCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             StatusCountRow(counts)
             Spacer(Modifier.weight(1f))
-            Text("OPEN ▶", style = GwTypography.Audit.copy(color = GwColors.infoCyan))
+            Text("${stringResource(R.string.open_action)} ◀", style = GwTypography.Audit.copy(color = GwColors.infoCyan))
         }
     }
 }
@@ -315,8 +317,8 @@ fun SquadView(
 
     Column(modifier = modifier.fillMaxSize()) {
         ViewMeta(
-            label  = "Squad ${squad.name}",
-            sub    = "SQD ${squad.id}",
+            label  = stringResource(R.string.squad_title, squad.name),
+            sub    = stringResource(R.string.squad_short, squad.id),
             total  = soldiers.size,
             counts = counts,
         )
@@ -394,12 +396,12 @@ fun StatusCountRow(counts: StatusCounts) {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment     = Alignment.CenterVertically,
     ) {
-        StatusCount(counts.ok,       SoldierStatus.OK.color,       "OK")
-        StatusCount(counts.caution,  SoldierStatus.CAUTION.color,  "CAUT")
-        StatusCount(counts.high,     SoldierStatus.HIGH.color,     "HIGH")
-        StatusCount(counts.critical, SoldierStatus.CRITICAL.color, "CRIT")
+        StatusCount(counts.ok,       SoldierStatus.OK.color,       stringResource(R.string.status_ok))
+        StatusCount(counts.caution,  SoldierStatus.CAUTION.color,  stringResource(R.string.status_caut))
+        StatusCount(counts.high,     SoldierStatus.HIGH.color,     stringResource(R.string.status_high))
+        StatusCount(counts.critical, SoldierStatus.CRITICAL.color, stringResource(R.string.status_crit))
         if (counts.offline > 0)
-            StatusCount(counts.offline, SoldierStatus.OFFLINE.color, "OFF")
+            StatusCount(counts.offline, SoldierStatus.OFFLINE.color, stringResource(R.string.status_offline))
     }
 }
 
@@ -446,7 +448,7 @@ fun ViewMeta(label: String, sub: String, total: Int, counts: StatusCounts) {
             )
             Spacer(Modifier.width(GwSpacing.sp2.dp))
             Column {
-                Text("PERSONNEL", style = GwTypography.Audit.copy(color = GwColors.fg300))
+                Text(stringResource(R.string.personnel), style = GwTypography.Audit.copy(color = GwColors.fg300))
                 StatusCountRow(counts)
             }
         }
@@ -476,18 +478,18 @@ fun CasualtiesView(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("TRIAGE BOARD", style = GwTypography.H2.copy(color = GwColors.fg000))
-                Text("ALL WOUNDED · SORTED BY SEVERITY",
+                Text(stringResource(R.string.triage_board), style = GwTypography.H2.copy(color = GwColors.fg000))
+                Text(stringResource(R.string.triage_subtitle),
                     style = GwTypography.Audit.copy(color = GwColors.fg300))
             }
             // Count badges
-            SeverityBadge("CRIT", critCount, GwColors.critRed)
+            SeverityBadge(stringResource(R.string.status_crit), critCount, GwColors.critRed)
             Spacer(Modifier.width(GwSpacing.sp2.dp))
-            SeverityBadge("HIGH", highCount, SoldierStatus.HIGH.color)
+            SeverityBadge(stringResource(R.string.status_high), highCount, SoldierStatus.HIGH.color)
             Spacer(Modifier.width(GwSpacing.sp2.dp))
-            SeverityBadge("CAUT", cautCount, SoldierStatus.CAUTION.color)
+            SeverityBadge(stringResource(R.string.status_caut), cautCount, SoldierStatus.CAUTION.color)
             Spacer(Modifier.width(GwSpacing.sp2.dp))
-            SeverityBadge("TOTAL", wounded.size, GwColors.fg200)
+            SeverityBadge(stringResource(R.string.total), wounded.size, GwColors.fg200)
         }
 
         Spacer(Modifier.height(GwSpacing.sp3.dp))
@@ -499,7 +501,7 @@ fun CasualtiesView(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("✓", style = GwTypography.H1.copy(color = GwColors.stateLive, fontSize = 48.sp))
-                    Text("ALL PERSONNEL NOMINAL",
+                    Text(stringResource(R.string.all_nominal),
                         style = GwTypography.Label.copy(color = GwColors.stateLive))
                 }
             }
@@ -612,10 +614,10 @@ private fun CasualtyRow(
         Spacer(Modifier.width(GwSpacing.sp3.dp))
 
         // Actions
-        ActionChip("VIEW", GwColors.bg300, GwColors.strokeDefault, GwColors.fg000, onView)
+        ActionChip(stringResource(R.string.view), GwColors.bg300, GwColors.strokeDefault, GwColors.fg000, onView)
         if (isCritical) {
             Spacer(Modifier.width(GwSpacing.sp2.dp))
-            ActionChip("CASEVAC", GwColors.critRedBg, GwColors.critRed, GwColors.fg000, onCasevac)
+            ActionChip(stringResource(R.string.casevac), GwColors.critRedBg, GwColors.critRed, GwColors.fg000, onCasevac)
         }
     }
 }

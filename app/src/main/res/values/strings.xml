@@ -19,4 +19,49 @@
     <!-- Critical banner -->
     <string name="critical_hemorrhage">CRITICAL — HEMORRHAGE SUSPECTED</string>
     <string name="acknowledge">ACKNOWLEDGE</string>
+
+    <!-- Tactical Dashboard UI -->
+    <string name="company_overview">COMPANY OVERVIEW</string>
+    <string name="platoons_count">%1$d PLATOONS</string>
+    <string name="personnel">PERSONNEL</string>
+    <string name="squad_title">Squad %1$s</string>
+    <string name="squad_short">SQD %1$s</string>
+    <string name="wia">WIA</string>
+    <string name="simulate">SIMULATE</string>
+    <string name="triage_board">TRIAGE BOARD</string>
+    <string name="triage_subtitle">ALL WOUNDED · SORTED BY SEVERITY</string>
+    <string name="total">TOTAL</string>
+    <string name="all_nominal">ALL PERSONNEL NOMINAL</string>
+    <string name="view">VIEW</string>
+    <string name="open_action">OPEN</string>
+    <string name="casevac">CASEVAC</string>
+    
+    <!-- Statuses -->
+    <string name="status_ok">OK</string>
+    <string name="status_caut">CAUT</string>
+    <string name="status_high">HIGH</string>
+    <string name="status_crit">CRIT</string>
+    <string name="status_critical">CRITICAL</string>
+    <string name="status_offline">OFF</string>
+    
+    <!-- Roles -->
+    <string name="role_tl">TL</string>
+    <string name="role_med">MED</string>
+    <string name="role_rto">RTO</string>
+    <string name="role_saw">SAW</string>
+    <string name="role_rif">RIF</string>
+    <string name="role_m203">M203</string>
+    
+    <!-- Top Bar -->
+    <string name="medcom">MEDCOM</string>
+    <string name="satcom">SATCOM</string>
+    <string name="mesh">MESH</string>
+    <string name="telemed">TELEMED</string>
+    <string name="gps">GPS</string>
+    <string name="hi_prec">HI-PREC</string>
+    <string name="lock">LOCK</string>
+    <string name="off">OFF</string>
+    <string name="on">ON</string>
+    <string name="op_name">OP NORTH WIND</string>
+    <string name="day_plus">D+3</string>
 </resources>

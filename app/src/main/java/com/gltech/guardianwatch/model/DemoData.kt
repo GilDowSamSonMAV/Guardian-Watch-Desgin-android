@@ -7,18 +7,18 @@ object DemoData {
     // 3 platoons (מחלקות) × 4 squads (כיתות) × 8 soldiers = 96 personnel
 
     private val names = listOf(
-        "COHEN","LEVI","MIZRAHI","PERETZ","KATZ","AVRAHAM","TZUR","DAYAN",
-        "SHAPIRO","BARAK","GOLAN","NAVON","AMIR","OFER","HAIM","IDAN",
-        "YARDEN","PELED","ROEE","EYAL","ARIEL","CARMI","BINYAMIN","NOAM",
-        "MATAN","TIROSH","ARNON","LAVY","MAOR","ALON","GUY","RAN",
-        "ORI","ITAI","AYALON","EGOZ","FEINER","GIDEON","LIDOR","OMRI",
-        "TAMARI","UZIEL","WOLF","YANIV","VIDAL","ZAMIR","ROSH","SADE",
-        "DRORI","HAREL","GALOR","NIR","TAL","OZ","PAZ","BAR",
-        "EDEN","YOAV","DOTAN","MOKED","SAAR","SARID","ERAN","GIORA",
-        "ZOHAR","BOREN","AGMON","DORI","ARAD","AMIT","AMOS","NEVO",
-        "PARDO","RAZ","SAGIV","TOMER","UZAN","VERED","GABI","TAMIR",
-        "SNIR","RONEN","KOBI","LIRON","NATAN","EFRAT","GALIL","ASSAF",
-        "BITON","HADAD","NACHUM","YITZHAK","SHLOMO","MOSHE","YOSEF","YAIR",
+        "כהן","לוי","מזרחי","פרץ","כץ","אברהם","צור","דיין",
+        "שפירא","ברק","גולן","נבון","אמיר","עופר","חיים","עידן",
+        "ירדן","פלד","רועי","אייל","אריאל","כרמי","בנימין","נועם",
+        "מתן","תירוש","ארנון","לביא","מאור","אלון","גיא","רן",
+        "אורי","איתי","איילון","אגוז","פיינר","גדעון","לידור","עמרי",
+        "תמרי","עוזיאל","וולף","יניב","וידל","זמיר","ראש","שדה",
+        "דרורי","הראל","גלעד","ניר","טל","עוז","פז","בר",
+        "עדן","יואב","דותן","מוקד","סער","שריד","ערן","גיורא",
+        "זוהר","בורן","אגמון","דורי","ערד","עמית","עמוס","נבו",
+        "פרדו","רז","שגיב","תומר","אוזן","ורד","גבי","תמיר",
+        "שניר","רונן","קובי","לירון","נתן","אפרת","גליל","אסף",
+        "ביטון","חדד","נחום","יצחק","שלמה","משה","יוסף","יאיר",
     )
     private var nameIdx = 0
     private fun nextName() = names[nameIdx++ % names.size]
@@ -64,10 +64,10 @@ object DemoData {
         nameIdx = 0
 
         // ── PLATOON 1 — Machlaka Aleph ────────────────────────────────────────
-        val sq1A = mkSquad("1", "A", "Kita Aleph")
+        val sq1A = mkSquad("1", "A", "כיתה א'")
         val sq1B = run {
             val sid = "1B"
-            Squad(sid, "Kita Bet", "1", listOf(
+            Squad(sid, "כיתה ב'", "1", listOf(
                 soldier(sid,1,SoldierRole.TL),
                 soldier(sid,2,SoldierRole.RIF,
                     status=SoldierStatus.CAUTION, hr=128, br=22, risk=3.8f),
@@ -80,16 +80,16 @@ object DemoData {
                 soldier(sid,8,SoldierRole.DM),
             ))
         }
-        val sq1C = mkSquad("1", "C", "Kita Gimel")
-        val sq1D = mkSquad("1", "D", "Kita Dalet")
+        val sq1C = mkSquad("1", "C", "כיתה ג'")
+        val sq1D = mkSquad("1", "D", "כיתה ד'")
 
-        val plt1 = Platoon("PLT-1","1st Machlaka","GOLANI-1",
+        val plt1 = Platoon("PLT-1","מחלקה 1","גולני-1",
             "GRID 18S TJ 4421 8896", listOf(sq1A,sq1B,sq1C,sq1D))
 
         // ── PLATOON 2 — Machlaka Bet ──────────────────────────────────────────
         val sq2A = run {
             val sid = "2A"
-            Squad(sid,"Kita Aleph","2", listOf(
+            Squad(sid,"כיתה א'","2", listOf(
                 soldier(sid,1,SoldierRole.TL),
                 soldier(sid,2,SoldierRole.RIF,        // ★ CRITICAL
                     status=SoldierStatus.CRITICAL, hr=187, br=30,
@@ -107,7 +107,7 @@ object DemoData {
         }
         val sq2B = run {
             val sid = "2B"
-            Squad(sid,"Kita Bet","2", listOf(
+            Squad(sid,"כיתה ב'","2", listOf(
                 soldier(sid,1,SoldierRole.TL),
                 soldier(sid,2,SoldierRole.RIF,        // ★ CRITICAL
                     status=SoldierStatus.CRITICAL, hr=194, br=32,
@@ -124,10 +124,10 @@ object DemoData {
                 soldier(sid,8,SoldierRole.DM),
             ))
         }
-        val sq2C = mkSquad("2","C","Kita Gimel")
+        val sq2C = mkSquad("2","C","כיתה ג'")
         val sq2D = run {
             val sid = "2D"
-            Squad(sid,"Kita Dalet","2", listOf(
+            Squad(sid,"כיתה ד'","2", listOf(
                 soldier(sid,1,SoldierRole.TL),
                 soldier(sid,2,SoldierRole.RIF,
                     status=SoldierStatus.CAUTION, hr=120, risk=3.3f),
@@ -142,14 +142,14 @@ object DemoData {
                 soldier(sid,8,SoldierRole.DM),
             ))
         }
-        val plt2 = Platoon("PLT-2","2nd Machlaka","GOLANI-2",
+        val plt2 = Platoon("PLT-2","מחלקה 2","גולני-2",
             "GRID 18S TJ 4486 8741", listOf(sq2A,sq2B,sq2C,sq2D))
 
         // ── PLATOON 3 — Machlaka Gimel ────────────────────────────────────────
-        val sq3A = mkSquad("3","A","Kita Aleph")
+        val sq3A = mkSquad("3","A","כיתה א'")
         val sq3B = run {
             val sid = "3B"
-            Squad(sid,"Kita Bet","3", listOf(
+            Squad(sid,"כיתה ב'","3", listOf(
                 soldier(sid,1,SoldierRole.TL),
                 soldier(sid,2,SoldierRole.RIF,
                     status=SoldierStatus.CAUTION, hr=118, risk=3.5f),
@@ -162,16 +162,16 @@ object DemoData {
                 soldier(sid,8,SoldierRole.DM),
             ))
         }
-        val sq3C = mkSquad("3","C","Kita Gimel")
-        val sq3D = mkSquad("3","D","Kita Dalet")
+        val sq3C = mkSquad("3","C","כיתה ג'")
+        val sq3D = mkSquad("3","D","כיתה ד'")
 
-        val plt3 = Platoon("PLT-3","3rd Machlaka","GOLANI-3",
+        val plt3 = Platoon("PLT-3","מחלקה 3","גולני-3",
             "GRID 18S TJ 4538 8804", listOf(sq3A,sq3B,sq3C,sq3D))
 
         COMPANY = Company(
             id       = "GOLANI-13A",
-            callsign = "GOLANI-6",
-            name     = "Golani · 13th Btn · Aleph Coy",
+            callsign = "גולני-6",
+            name     = "גולני · גדוד 13 · פלוגה א'",
             platoons = listOf(plt1, plt2, plt3),
         )
 
@@ -184,9 +184,9 @@ object DemoData {
                     soldierId    = s.id,
                     type         = "VITALS",
                     message      = when {
-                        s.spo2 < 90 -> "TACHYCARDIA · HYPOXIA · HEMORRHAGE"
-                        s.hr  > 180 -> "SEVERE TACHYCARDIA · HEMORRHAGE RISK"
-                        else        -> "TACHYCARDIA · VITALS CRITICAL"
+                        s.spo2 < 90 -> "טכיקרדיה · היפוקסיה · דימום מסיבי"
+                        s.hr  > 180 -> "טכיקרדיה חריפה · סכנת דימום"
+                        else        -> "טכיקרדיה · מדדים קריטיים"
                     },
                     triggeredSec = (i + 1) * 12,
                 )

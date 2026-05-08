@@ -27,8 +27,8 @@ data class Soldier(
 )
 
 enum class SoldierRole(val display: String) {
-    TL("TL"), MED("MED"), RTO("RTO"), SAW("SAW"),
-    M203("M203"), DM("DM"), RIF("RIF"),
+    TL("מ״כ"), MED("חובש"), RTO("קשר"), SAW("קלע"),
+    M203("מטול"), DM("צלף"), RIF("רובאי"),
 }
 
 enum class MeshSignal { STRONG, WEAK, NONE }

@@ -55,12 +55,14 @@ fun GuardianWatchTheme(content: @Composable () -> Unit) {
         content = {
             // Always paint the field background first so we don't flash
             // Material's default surface color during composition.
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(GwColors.bg000)
-            ) {
-                content()
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Rtl) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(GwColors.bg000)
+                ) {
+                    content()
+                }
             }
         }
     )
