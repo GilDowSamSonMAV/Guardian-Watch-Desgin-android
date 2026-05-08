@@ -62,6 +62,22 @@ fun OsmTacMap(
         }
     }
 
+    // Keep track of critical markers for animation
+    val criticalMarkers = remember { mutableListOf<Marker>() }
+
+    LaunchedEffect(Unit) {
+        var blink = false
+        while (true) {
+            kotlinx.coroutines.delay(500)
+            blink = !blink
+            criticalMarkers.forEach {
+                it.alpha = if (blink) 0.3f else 1.0f
+            }
+            // If the map is already attached, invalidate it to show changes
+            mapView?.invalidate()
+        }
+    }
+
     // Build stable position map: use provided positions or scatter demo positions
     val positions = remember(soldierPositions, centerLat, centerLon) {
         soldierPositions ?: buildDemoPositions(company, centerLat, centerLon)
@@ -108,6 +124,7 @@ fun OsmTacMap(
     // Rebuild overlays whenever positions or data changes
     DisposableEffect(positions, activeSquadId, alertSoldierId) {
         mapView.overlays.clear()
+        criticalMarkers.clear()
 
         // Close any open info windows
         InfoWindow.closeAllInfoWindowsOn(mapView)
@@ -167,6 +184,9 @@ fun OsmTacMap(
                 }
             }
             mapView.overlays.add(marker)
+            if (isCritical) {
+                criticalMarkers.add(marker)
+            }
         }
 
         // Draw a bounding polygon for the active squad's area
@@ -184,6 +204,26 @@ fun OsmTacMap(
                 }
             }
         }
+
+        // 3. Add HLZ (Helicopter Landing Zone)
+        val hlzMarker = Marker(mapView).apply {
+            position = GeoPoint(centerLat + 0.005, centerLon - 0.003)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            title = "מנחת מסוקים (HLZ)"
+            icon = buildTextIcon(context, "H מנחת", density, android.graphics.Color.parseColor("#3DDC84"))
+            setOnMarkerClickListener { m, _ -> m.showInfoWindow(); true }
+        }
+        mapView.overlays.add(hlzMarker)
+
+        // 4. Add CCP (Casualty Collection Point / תאג״ד)
+        val ccpMarker = Marker(mapView).apply {
+            position = GeoPoint(centerLat - 0.002, centerLon + 0.001)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            title = "תאג״ד (נקודת איסוף פצועים)"
+            icon = buildTextIcon(context, "✚ תאג״ד", density, android.graphics.Color.parseColor("#43AFC1"))
+            setOnMarkerClickListener { m, _ -> m.showInfoWindow(); true }
+        }
+        mapView.overlays.add(ccpMarker)
 
         mapView.invalidate()
 

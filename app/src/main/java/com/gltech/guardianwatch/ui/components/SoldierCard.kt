@@ -71,7 +71,7 @@ fun SoldierCard(
             // Position number
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    "POS",
+                    "עמדה",
                     style = GwTypography.Audit.copy(color = GwColors.fg300, fontSize = 9.sp),
                 )
                 Text(
@@ -115,7 +115,7 @@ fun SoldierCard(
                 VitalMini("SpO₂",
                     if (soldier.spo2 > 0) soldier.spo2.toString() else "--", "%",
                     if (soldier.spo2 in 1..91) GwColors.critRed else GwColors.fg000)
-                VitalMini("TEMP",
+                VitalMini("חום גוף",
                     if (soldier.coreTemp > 0f) String.format("%.1f", soldier.coreTemp) else "--",
                     "°C",
                     if (soldier.coreTemp > 38f) GwColors.warnAmber else GwColors.fg000)
@@ -135,7 +135,7 @@ fun SoldierCard(
                     .border(1.dp, GwColors.strokeHairline, RoundedCornerShape(GwRadii.r1.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("OFFLINE · ${formatStaleness(soldier.lastUpdateSec)}",
+                Text("מנותק · ${formatStaleness(soldier.lastUpdateSec)}",
                     style = GwTypography.Audit.copy(color = GwColors.fg300))
             }
             Spacer(Modifier.height(GwSpacing.sp2.dp))
@@ -176,7 +176,7 @@ private fun VitalMini(label: String, value: String, unit: String, valueColor: Co
 fun RiskBar(risk: Float, statusColor: Color, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("COMPOSITE RISK", style = GwTypography.Audit.copy(
+            Text("מדד קריטיות (CRI)", style = GwTypography.Audit.copy(
                 color = GwColors.fg300, fontSize = 9.sp))
             Spacer(Modifier.weight(1f))
             Text(
@@ -223,7 +223,7 @@ private fun StatusLabel(status: SoldierStatus) {
             Box(Modifier.size(6.dp).clip(androidx.compose.foundation.shape.CircleShape)
                 .background(status.color))
             Spacer(Modifier.width(3.dp))
-            Text("OK", style = GwTypography.Audit.copy(color = status.color))
+            Text("תקין", style = GwTypography.Audit.copy(color = status.color))
         }
         return
     }

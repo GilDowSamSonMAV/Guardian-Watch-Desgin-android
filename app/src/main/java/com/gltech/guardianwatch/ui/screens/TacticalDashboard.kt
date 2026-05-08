@@ -310,11 +310,20 @@ fun TacticalDashboard(
                     val woundedCount = DemoData.allWounded().size
                     val critCount    = DemoData.allWounded().count { it.third.status == SoldierStatus.CRITICAL }
                     val wiaActive    = navLevel == TacNavLevel.Casualties
+                    
+                    val wiaPulse = rememberInfiniteTransition(label = "wiaPulse")
+                    val wiaPulseAlpha by wiaPulse.animateFloat(
+                        initialValue = 0.5f,
+                        targetValue = 1.0f,
+                        animationSpec = infiniteRepeatable(tween(400), RepeatMode.Reverse),
+                        label = "wiaPulseAlpha"
+                    )
+                    val wiaBgColor = if (wiaActive) GwColors.critRed else if (critCount > 0) GwColors.critRed.copy(alpha = wiaPulseAlpha) else GwColors.bg300
+                    
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(GwRadii.r1.dp))
-                            .background(if (wiaActive) GwColors.critRed else
-                                if (critCount > 0) GwColors.critRedBg else GwColors.bg300)
+                            .background(wiaBgColor)
                             .border(1.dp,
                                 if (critCount > 0) GwColors.critRed else GwColors.strokeDefault,
                                 RoundedCornerShape(GwRadii.r1.dp))

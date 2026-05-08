@@ -1,5 +1,10 @@
 package com.gltech.guardianwatch.ui.screens
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -471,14 +477,33 @@ fun CasualtiesView(
     val highCount = wounded.count { it.third.status == SoldierStatus.HIGH }
     val cautCount = wounded.count { it.third.status == SoldierStatus.CAUTION }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    val infiniteTransition = rememberInfiniteTransition(label = "triagePulse")
+    val triagePulse by infiniteTransition.animateFloat(
+        initialValue = 0.1f,
+        targetValue = 0.4f,
+        animationSpec = infiniteRepeatable(tween(500), RepeatMode.Reverse),
+        label = "triagePulseAlpha"
+    )
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(GwRadii.r2.dp))
+            .background(if (critCount > 0) GwColors.critRed.copy(alpha = triagePulse) else GwColors.bg100)
+            .border(2.dp, if (critCount > 0) GwColors.critRed else Color.Transparent, RoundedCornerShape(GwRadii.r2.dp))
+            .padding(if (critCount > 0) GwSpacing.sp3.dp else 0.dp)
+    ) {
         // ── Header ────────────────────────────────────────────────────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.triage_board), style = GwTypography.H2.copy(color = GwColors.fg000))
+                if (critCount > 0) {
+                    Text("⚠ מצב חירום", style = GwTypography.H1.copy(color = GwColors.critRed, fontSize = 24.sp))
+                } else {
+                    Text(stringResource(R.string.triage_board), style = GwTypography.H2.copy(color = GwColors.fg000))
+                }
                 Text(stringResource(R.string.triage_subtitle),
                     style = GwTypography.Audit.copy(color = GwColors.fg300))
             }

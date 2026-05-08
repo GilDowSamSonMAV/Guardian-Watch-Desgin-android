@@ -113,7 +113,7 @@ private fun DrawerHeader(soldier: Soldier, accentColor: Color, onClose: () -> Un
             .padding(horizontal = GwSpacing.sp5.dp, vertical = GwSpacing.sp3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column { Text("POS", style = GwTypography.Audit.copy(color = GwColors.fg300, fontSize = 9.sp)) }
+        Column { Text("עמדה", style = GwTypography.Audit.copy(color = GwColors.fg300, fontSize = 9.sp)) }
         Spacer(Modifier.width(4.dp))
         Text(
             text = soldier.pos.toString().padStart(2, '0'),
@@ -159,10 +159,10 @@ private fun VitalsColumn(soldier: Soldier, accentColor: Color, modifier: Modifie
     val brWave = remember(soldier.br) { makeWave(120, soldier.br / 60f, ampScale = 0.4f) }
 
     Column(modifier = modifier.verticalScroll(rememberScrollState())) {
-        SectionLabel("VITALS · LIVE")
+        SectionLabel("מדדים · חי")
 
         WaveCard(
-            label  = "HEART RATE",
+            label  = "דופק",
             value  = soldier.hr.toString(),
             unit   = "bpm",
             range  = "60–100",
@@ -173,7 +173,7 @@ private fun VitalsColumn(soldier: Soldier, accentColor: Color, modifier: Modifie
         Spacer(Modifier.height(GwSpacing.sp3.dp))
 
         WaveCard(
-            label  = "BREATHING",
+            label  = "נשימה",
             value  = soldier.br.toString(),
             unit   = "rpm",
             range  = "12–20",
@@ -189,11 +189,11 @@ private fun VitalsColumn(soldier: Soldier, accentColor: Color, modifier: Modifie
                 if (soldier.spo2 > 0) "${soldier.spo2}%" else "--",
                 if (soldier.spo2 in 1..91) GwColors.critRed else GwColors.fg000,
                 Modifier.weight(1f))
-            StatBox("CORE TEMP",
+            StatBox("חום גוף",
                 if (soldier.coreTemp > 0f) "${String.format("%.1f", soldier.coreTemp)}°C" else "--",
                 if (soldier.coreTemp > 38f) GwColors.warnAmber else GwColors.fg000,
                 Modifier.weight(1f))
-            StatBox("HSI",
+            StatBox("CRI (קריטיות)",
                 String.format("%.1f", soldier.risk),
                 accentColor,
                 Modifier.weight(1f))
@@ -219,7 +219,7 @@ private fun WaveCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column {
                 Text(label, style = GwTypography.Label.copy(color = GwColors.fg200))
-                Text("NORM $range", style = GwTypography.Audit.copy(color = GwColors.fg400))
+                Text("תקין $range", style = GwTypography.Audit.copy(color = GwColors.fg400))
             }
             Spacer(Modifier.weight(1f))
             Row(verticalAlignment = Alignment.Bottom) {
@@ -268,7 +268,7 @@ private fun StatBox(label: String, value: String, valueColor: Color, modifier: M
 @Composable
 private fun AssessmentColumn(soldier: Soldier, accentColor: Color, modifier: Modifier) {
     Column(modifier = modifier.verticalScroll(rememberScrollState())) {
-        SectionLabel("ASSESSMENT")
+        SectionLabel("הערכת מצב")
 
         // Risk card
         Column(
@@ -280,7 +280,7 @@ private fun AssessmentColumn(soldier: Soldier, accentColor: Color, modifier: Mod
                 .padding(GwSpacing.sp4.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("COMPOSITE RISK", style = GwTypography.Label.copy(color = GwColors.fg300))
+                Text("מדד קריטיות (CRI)", style = GwTypography.Label.copy(color = GwColors.fg300))
                 Spacer(Modifier.weight(1f))
                 Text(
                     String.format("%.1f", soldier.risk),
@@ -311,7 +311,7 @@ private fun AssessmentColumn(soldier: Soldier, accentColor: Color, modifier: Mod
             Row {
                 Text("0", style = GwTypography.Audit.copy(color = GwColors.fg300))
                 Spacer(Modifier.weight(1f))
-                Text("OK", style = GwTypography.Audit.copy(color = SoldierStatus.OK.color))
+                Text("תקין", style = GwTypography.Audit.copy(color = SoldierStatus.OK.color))
                 Spacer(Modifier.weight(1f))
                 Text("3", style = GwTypography.Audit.copy(color = SoldierStatus.CAUTION.color))
                 Spacer(Modifier.weight(1f))
@@ -323,16 +323,16 @@ private fun AssessmentColumn(soldier: Soldier, accentColor: Color, modifier: Mod
             }
             Spacer(Modifier.height(GwSpacing.sp3.dp))
             // Factor chips
-            if (soldier.hr > 140) FactorChip("↑ TACHYCARDIA (${soldier.hr})", accentColor)
-            if (soldier.br > 22)  FactorChip("↑ TACHYPNEA (${soldier.br})", accentColor)
-            if (soldier.spo2 in 1..91) FactorChip("↓ HYPOXIA (${soldier.spo2}%)", accentColor)
+            if (soldier.hr > 140) FactorChip("↑ טכיקרדיה (${soldier.hr})", accentColor)
+            if (soldier.br > 22)  FactorChip("↑ טכיפנאה (${soldier.br})", accentColor)
+            if (soldier.spo2 in 1..91) FactorChip("↓ היפוקסיה (${soldier.spo2}%)", accentColor)
             if (soldier.coreTemp > 38f) FactorChip(
-                "↑ FEVER (${String.format("%.1f", soldier.coreTemp)}°)", accentColor)
-            if (soldier.risk < 3f) FactorChip("● WITHIN BASELINE", SoldierStatus.OK.color)
+                "↑ חום גבוה (${String.format("%.1f", soldier.coreTemp)}°)", accentColor)
+            if (soldier.risk < 3f) FactorChip("● בטווח התקין", SoldierStatus.OK.color)
         }
 
         Spacer(Modifier.height(GwSpacing.sp4.dp))
-        SectionLabel("POSITION")
+        SectionLabel("מיקום")
 
         Column(
             modifier = Modifier
@@ -345,10 +345,10 @@ private fun AssessmentColumn(soldier: Soldier, accentColor: Color, modifier: Mod
             Text("18S TJ 4486 8741",
                 style = GwTypography.MonoLg.copy(color = GwColors.fg000))
             Spacer(Modifier.height(GwSpacing.sp3.dp))
-            PosRow("LAT", "33.2871° N")
-            PosRow("LON", "35.5612° E")
-            PosRow("ALT", "482 M")
-            PosRow("FROM TOC", "2.4 KM 047°")
+            PosRow("רוחב", "33.2871° N")
+            PosRow("אורך", "35.5612° E")
+            PosRow("גובה", "482 מטר")
+            PosRow("מרחק חפ״ק", "2.4 ק״מ 047°")
         }
     }
 }
@@ -385,41 +385,41 @@ private fun PosRow(label: String, value: String) {
 @Composable
 private fun GearColumn(soldier: Soldier, onCasevac: () -> Unit, modifier: Modifier) {
     Column(modifier = modifier.verticalScroll(rememberScrollState())) {
-        SectionLabel("GEAR · SENSORS")
+        SectionLabel("ציוד וחיישנים")
 
-        GearRow("WEARABLE",    "GARMIN INSTINCT",
+        GearRow("שעון חכם",    "GARMIN INSTINCT",
             SoldierStatus.OK.color)
-        GearRow("BATTERY",     "${soldier.batteryPct}%",
+        GearRow("סוללה",     "${soldier.batteryPct}%",
             if (soldier.batteryPct > 30) SoldierStatus.OK.color else SoldierStatus.CAUTION.color)
-        GearRow("MESH RADIO",  when (soldier.meshSignal) {
-            MeshSignal.STRONG -> "STRONG"
-            MeshSignal.WEAK   -> "WEAK"
-            MeshSignal.NONE   -> "NO SIGNAL"
+        GearRow("רשת קשר",  when (soldier.meshSignal) {
+            MeshSignal.STRONG -> "חזק"
+            MeshSignal.WEAK   -> "חלש"
+            MeshSignal.NONE   -> "אין אות"
         }, when (soldier.meshSignal) {
             MeshSignal.STRONG -> SoldierStatus.OK.color
             else              -> SoldierStatus.CAUTION.color
         })
         GearRow("GPS",         "HI-PRECISION", SoldierStatus.OK.color)
         GearRow("IFAK",
-            if (soldier.status == SoldierStatus.CRITICAL) "DEPLOYED · TQ x1" else "READY",
+            if (soldier.status == SoldierStatus.CRITICAL) "בשימוש · ח.ע 1" else "מוכן",
             if (soldier.status == SoldierStatus.CRITICAL) SoldierStatus.CAUTION.color
             else SoldierStatus.OK.color)
 
         Spacer(Modifier.height(GwSpacing.sp4.dp))
-        SectionLabel("ACTIONS")
+        SectionLabel("פעולות")
 
         // 2×2 action grid
         Row(horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp3.dp)) {
-            ActionButton("VOICE",   GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
+            ActionButton("קשר",   GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
                 Modifier.weight(1f)) {}
-            ActionButton("PING",    GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
+            ActionButton("פינג",    GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
                 Modifier.weight(1f)) {}
         }
         Spacer(Modifier.height(GwSpacing.sp3.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp3.dp)) {
-            ActionButton("HISTORY", GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
+            ActionButton("היסטוריה", GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
                 Modifier.weight(1f)) {}
-            ActionButton("CASEVAC", GwColors.critRedBg, GwColors.critRed, GwColors.fg000,
+            ActionButton("פינוי", GwColors.critRedBg, GwColors.critRed, GwColors.fg000,
                 Modifier.weight(1f), onCasevac)
         }
     }
@@ -473,11 +473,11 @@ private fun DrawerFooter(soldier: Soldier) {
             .padding(horizontal = GwSpacing.sp5.dp, vertical = GwSpacing.sp2.dp),
         horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp5.dp),
     ) {
-        Text("● LAST UPDATE T+${soldier.lastUpdateSec}s",
+        Text("● עדכון אחרון T+${soldier.lastUpdateSec}s",
             style = GwTypography.Audit.copy(color = GwColors.fg300))
-        Text("● AUTO-MED ENABLED",
+        Text("● טיפול אוטומטי זמין",
             style = GwTypography.Audit.copy(color = GwColors.fg300))
-        Text("● TRIAGE FEED: P1",
+        Text("● עדיפות פינוי: P1",
             style = GwTypography.Audit.copy(color = GwColors.fg300))
     }
 }
