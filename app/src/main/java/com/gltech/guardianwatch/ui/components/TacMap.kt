@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gltech.guardianwatch.model.Company
 import com.gltech.guardianwatch.model.Platoon
+import com.gltech.guardianwatch.model.SimulationEngine
 import com.gltech.guardianwatch.model.Soldier
 import com.gltech.guardianwatch.model.SoldierStatus
 import com.gltech.guardianwatch.model.Squad
@@ -37,6 +38,9 @@ import kotlin.random.Random
  *   - HOTZONE polygon (dashed red)
  *   - LZ-ALPHA marker (square H)
  *   - Map controls (TERRAIN / SAT / IR toggle chips)
+ *
+ * Now accepts external `positions` map and optional `simulation` reference
+ * so soldier dots can move during simulation mode.
  */
 @Composable
 fun TacMap(
@@ -44,13 +48,18 @@ fun TacMap(
     activeSquadId: String?,
     alertSoldierId: String?,
     onPinClicked: (Soldier) -> Unit,
+    positions: Map<String, Pair<Float, Float>> = emptyMap(),
+    simulation: SimulationEngine? = null,
     modifier: Modifier = Modifier,
 ) {
-    // Fixed pseudorandom positions for demo (seeded so they're stable)
-    val rng = Random(1337)
-
-    // Build position map: soldierId → (normalizedX, normalizedY) 0..1
-    val positions = buildSoldierPositions(company, rng)
+    // Use provided positions (which may be live from simulation)
+    val posMap = if (positions.isNotEmpty()) {
+        positions
+    } else {
+        // Fallback: build static positions
+        val rng = Random(1337)
+        buildSoldierPositions(company, rng)
+    }
 
     Box(
         modifier = modifier
@@ -124,12 +133,19 @@ fun TacMap(
                 drawPath(path2, tColor, style = Stroke(width = 0.8.dp.toPx()))
             }
 
-            // Soldier dots
-            positions.forEach { (soldierId, pos) ->
+            // Soldier dots — use positions from the map (may be animated from simulation)
+            posMap.forEach { (soldierId, pos) ->
                 val x = pos.first  * w
                 val y = pos.second * h
                 val soldier = findSoldier(company, soldierId) ?: return@forEach
-                val dotColor = soldier.status.color
+
+                // Get effective status color from simulation if running
+                val effectiveStatus = if (simulation != null && simulation.isRunning) {
+                    simulation.liveVitals[soldierId]?.status ?: soldier.status
+                } else {
+                    soldier.status
+                }
+                val dotColor = effectiveStatus.color
                 val isAlert  = soldierId == alertSoldierId
                 val radius   = if (isAlert) 7.dp.toPx() else 5.dp.toPx()
 

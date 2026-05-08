@@ -75,13 +75,20 @@ fun OsmTacMap(
             )
 
             // ── TILE SOURCE ───────────────────────────────────────────────────
-            // Esri World Imagery = free global high-res satellite (USGS only covers the USA!)
-            val esri = org.osmdroid.tileprovider.tilesource.XYTileSource(
-                "EsriWorldImagery",
-                0, 19, 256, ".jpg",
-                arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/")
-            )
-            setTileSource(esri)
+            // Google Maps Satellite = free global high-res satellite
+            val googleSat = object : org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase(
+                "GoogleSat",
+                0, 20, 256, ".png",
+                arrayOf("https://mt0.google.com", "https://mt1.google.com", "https://mt2.google.com", "https://mt3.google.com")
+            ) {
+                override fun getTileURLString(pMapTileIndex: Long): String {
+                    val z = org.osmdroid.util.MapTileIndex.getZoom(pMapTileIndex)
+                    val x = org.osmdroid.util.MapTileIndex.getX(pMapTileIndex)
+                    val y = org.osmdroid.util.MapTileIndex.getY(pMapTileIndex)
+                    return "$baseUrl/vt/lyrs=s&x=$x&y=$y&z=$z"
+                }
+            }
+            setTileSource(googleSat)
 
             // ── MAP SETTINGS ──────────────────────────────────────────────────
             setMultiTouchControls(true)
@@ -221,9 +228,10 @@ private fun buildSoldierIcon(
     hasRing: Boolean,
     ringColor: androidx.compose.ui.graphics.Color,
 ): android.graphics.drawable.BitmapDrawable {
-    val dotRadius  = if (isLarge) 16f else 11f
-    val ringRadius = dotRadius + 5f
-    val size       = ((if (hasRing) ringRadius else dotRadius) * 2 + 4).toInt()
+    val density = context.resources.displayMetrics.density
+    val dotRadius  = (if (isLarge) 14f else 8f) * density
+    val ringRadius = dotRadius + (4f * density)
+    val size       = ((if (hasRing) ringRadius else dotRadius) * 2 + (4f * density)).toInt()
 
     val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
@@ -234,7 +242,7 @@ private fun buildSoldierIcon(
         val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             this.color = ringColor.toArgb()
             style      = Paint.Style.STROKE
-            strokeWidth = 2.5f
+            strokeWidth = 3f * density
         }
         canvas.drawCircle(cx, cy, ringRadius, ringPaint)
     }
@@ -249,7 +257,7 @@ private fun buildSoldierIcon(
     val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         this.color = android.graphics.Color.argb(120, 0, 0, 0)
         style = Paint.Style.STROKE
-        strokeWidth = 1.5f
+        strokeWidth = 1.5f * density
     }
     canvas.drawCircle(cx, cy, dotRadius, borderPaint)
 
