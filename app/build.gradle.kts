@@ -111,4 +111,7 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.compose.ui.test.junit4)
+
+    // ----- Maps (OpenStreetMap — free, no API key) -----
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
 }

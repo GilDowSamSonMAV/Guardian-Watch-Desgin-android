@@ -403,17 +403,15 @@ fun TacticalDashboard(
                 .background(GwColors.strokeHairline))
             } // end Box wrapper
 
-            // RIGHT PANE — tactical map
-            TacMap(
-                company         = company,
-                activeSquadId   = (navLevel as? TacNavLevel.Squad)?.squadId,
-                alertSoldierId  = activeAlert?.soldierId,
-                onPinClicked    = { soldier ->
+            // RIGHT PANE — OSM satellite map
+            OsmTacMap(
+                company        = company,
+                activeSquadId  = (navLevel as? TacNavLevel.Squad)?.squadId,
+                alertSoldierId = activeAlert?.soldierId,
+                onPinClicked   = { soldier ->
                     onPickSquad(soldier.squadId)
                     selectedSoldier = soldier.id
                 },
-                positions       = mapPositions,
-                simulation      = simulation,
                 modifier = Modifier
                     .fillMaxHeight()
                     .weight(0.45f),
