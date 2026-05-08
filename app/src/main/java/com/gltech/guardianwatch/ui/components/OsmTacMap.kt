@@ -166,7 +166,7 @@ fun OsmTacMap(
 
     AndroidView(
         factory  = { mapView },
-        modifier = modifier,
+        modifier = modifier.androidx.compose.ui.draw.clipToBounds(),
         update   = { /* handled by DisposableEffect */ },
     )
 
