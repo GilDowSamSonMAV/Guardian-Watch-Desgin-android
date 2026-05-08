@@ -2,10 +2,14 @@ package com.gltech.guardianwatch.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gltech.guardianwatch.model.Company
 import com.gltech.guardianwatch.model.CriticalAlert
 import com.gltech.guardianwatch.model.DemoData
@@ -13,6 +17,7 @@ import com.gltech.guardianwatch.model.Soldier
 import com.gltech.guardianwatch.ui.components.*
 import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwSpacing
+import com.gltech.guardianwatch.ui.theme.GwTypography
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.delay
@@ -156,11 +161,42 @@ fun TacticalDashboard(
             Column(
                 modifier = Modifier.fillMaxSize(),
             ) {
-                // Toolbar: breadcrumb + meta
+                // ★ GUARDIAN WATCH brand header
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    GwColors.bg100,
+                                    GwColors.chromeOlive900,
+                                    GwColors.bg100,
+                                )
+                            )
+                        )
+                        .padding(horizontal = GwSpacing.sp5.dp, vertical = GwSpacing.sp3.dp),
+                ) {
+                    androidx.compose.foundation.layout.Column {
+                        Text(
+                            text  = "GUARDIAN WATCH",
+                            style = GwTypography.MonoLg.copy(
+                                color    = GwColors.fg000,
+                                fontSize = 28.sp,
+                                letterSpacing = 4.sp,
+                            ),
+                        )
+                        Text(
+                            text  = "TACTICAL MEDICAL OPERATIONS · ${company.callsign}",
+                            style = GwTypography.Audit.copy(color = GwColors.infoCyan),
+                        )
+                    }
+                }
+
+                // Breadcrumb toolbar
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp)
+                        .height(44.dp)
                         .background(GwColors.bg100)
                         .padding(horizontal = GwSpacing.sp4.dp),
                     verticalAlignment = Alignment.CenterVertically,
