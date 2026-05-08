@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -17,6 +18,7 @@ import com.gltech.guardianwatch.model.DemoData
 import com.gltech.guardianwatch.model.Soldier
 import com.gltech.guardianwatch.model.SoldierStatus
 import com.gltech.guardianwatch.ui.theme.GwColors
+import kotlinx.coroutines.delay
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -50,31 +52,12 @@ fun OsmTacMap(
     onPinClicked: (Soldier) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-
-    // Initialize osmdroid config once
+    val context = LocalContext.current    // Initialize osmdroid config once
     remember {
         Configuration.getInstance().apply {
             userAgentValue = "GuardianWatch/1.0"
-            // Use app cache dir — no extra permissions needed
             osmdroidBasePath = context.cacheDir
             osmdroidTileCache = context.cacheDir.resolve("osmdroid/tiles")
-        }
-    }
-
-    // Keep track of critical markers for animation
-    val criticalMarkers = remember { mutableListOf<Marker>() }
-
-    LaunchedEffect(Unit) {
-        var blink = false
-        while (true) {
-            kotlinx.coroutines.delay(500)
-            blink = !blink
-            criticalMarkers.forEach {
-                it.alpha = if (blink) 0.3f else 1.0f
-            }
-            // If the map is already attached, invalidate it to show changes
-            mapView?.invalidate()
         }
     }
 
@@ -91,8 +74,7 @@ fun OsmTacMap(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT
             )
 
-            // ── TILE SOURCE ───────────────────────────────────────────────────
-            // Google Maps Satellite = free global high-res satellite
+            // ── TILE SOURCE ────────────────────────────────────────────────────
             val googleSat = object : org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase(
                 "GoogleSat",
                 0, 20, 256, ".png",
@@ -118,6 +100,19 @@ fun OsmTacMap(
             // Initial camera
             controller.setZoom(zoomLevel)
             controller.setCenter(GeoPoint(centerLat, centerLon))
+        }
+    }
+
+    // Keep track of critical markers for animation
+    val criticalMarkers = remember { mutableListOf<Marker>() }
+
+    LaunchedEffect(Unit) {
+        var blink = false
+        while (true) {
+            delay(500L)
+            blink = !blink
+            criticalMarkers.forEach { it.alpha = if (blink) 0.3f else 1.0f }
+            mapView.invalidate()
         }
     }
 
