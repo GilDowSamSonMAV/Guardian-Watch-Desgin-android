@@ -30,7 +30,8 @@ import com.gltech.guardianwatch.ui.theme.GwSpacing
 import com.gltech.guardianwatch.ui.theme.GwTypography
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TOP BAR — MEDCOM · ALEPH-6 | SATCOM | MESH | TELEMED | GPS | time | batt
+// TOP BAR — Cleaner, less dense. Single horizontal strip.
+// Shows: mission label | status pills | clock | battery
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Connection/system status for the top status chip row. */
@@ -54,7 +55,7 @@ fun TacticalTopBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(40.dp)
+            .height(34.dp)
             .background(Color(0xFF0A0C0A))
             .border(width = 1.dp, color = GwColors.strokeHairline),
         verticalAlignment = Alignment.CenterVertically,
@@ -62,50 +63,85 @@ fun TacticalTopBar(
         Spacer(Modifier.width(GwSpacing.sp3.dp))
 
         // Brand monogram
-        BrandMonogram(size = 18)
-        Spacer(Modifier.width(GwSpacing.sp3.dp))
+        BrandMonogram(size = 16)
+        Spacer(Modifier.width(GwSpacing.sp2.dp))
 
-        // Mission + op
-        Column {
-            Text(
-                text = missionLabel,
-                style = GwTypography.Label.copy(color = GwColors.fg000, fontSize = 13.sp),
-            )
-            Text(
-                text = opLabel,
-                style = GwTypography.Audit.copy(color = GwColors.fg300),
-            )
-        }
+        // Mission label — compact
+        Text(
+            text = missionLabel,
+            style = GwTypography.Label.copy(color = GwColors.fg000, fontSize = 12.sp),
+        )
+        Spacer(Modifier.width(GwSpacing.sp2.dp))
+        Text(
+            text = opLabel,
+            style = GwTypography.Audit.copy(color = GwColors.fg300, fontSize = 9.sp),
+        )
 
         Spacer(Modifier.weight(1f))
 
-        // Status chips
-        StatusChip("SATCOM", if (status.satcomLocked) "LOCK" else "NO LOCK",
+        // Status pills — compact inline
+        StatusPill("SATCOM", if (status.satcomLocked) "LOCK" else "—",
             if (status.satcomLocked) GwColors.stateLive else GwColors.critRed)
-        Spacer(Modifier.width(GwSpacing.sp3.dp))
-        StatusChip("MESH", "${status.meshConnected}/${status.meshTotal}",
+        Spacer(Modifier.width(GwSpacing.sp2.dp))
+        StatusPill("MESH", "${status.meshConnected}/${status.meshTotal}",
             GwColors.stateLive)
-        Spacer(Modifier.width(GwSpacing.sp3.dp))
-        StatusChip("TELEMED", if (status.telemedOnline) "ONLINE" else "OFFLINE",
+        Spacer(Modifier.width(GwSpacing.sp2.dp))
+        StatusPill("TELEMED", if (status.telemedOnline) "ON" else "OFF",
             if (status.telemedOnline) GwColors.stateLive else GwColors.stateStale)
-        Spacer(Modifier.width(GwSpacing.sp3.dp))
-        StatusChip("GPS", status.gpsMode, GwColors.stateLive)
+        Spacer(Modifier.width(GwSpacing.sp2.dp))
+        StatusPill("GPS", status.gpsMode, GwColors.stateLive)
 
-        Spacer(Modifier.width(GwSpacing.sp5.dp))
+        Spacer(Modifier.width(GwSpacing.sp4.dp))
 
-        // Clock
+        // Clock — bold mono
         Text(
             text = timeStr,
-            style = GwTypography.MonoLg.copy(color = GwColors.fg000),
+            style = GwTypography.MonoLg.copy(color = GwColors.infoCyan, fontSize = 16.sp),
         )
+        Spacer(Modifier.width(GwSpacing.sp2.dp))
+
+        // Date
+        val cal = java.util.Calendar.getInstance()
+        val dayOfWeek = java.text.SimpleDateFormat("EEE", java.util.Locale.US).format(cal.time).uppercase()
+        val dateStr = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.US).format(cal.time).uppercase()
+        Text(
+            text = "$dayOfWeek $dateStr",
+            style = GwTypography.Audit.copy(color = GwColors.fg300, fontSize = 9.sp),
+        )
+
         Spacer(Modifier.width(GwSpacing.sp3.dp))
 
         // Battery
         BatteryIndicator(pct = status.batteryPct)
-        Spacer(Modifier.width(GwSpacing.sp4.dp))
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
     }
 }
 
+/** Compact inline status pill: dot + label + value */
+@Composable
+private fun StatusPill(label: String, value: String, valueColor: Color) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(3.dp))
+            .background(GwColors.bg200.copy(alpha = 0.6f))
+            .padding(horizontal = 5.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Live dot
+        Box(
+            modifier = Modifier
+                .size(5.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(valueColor)
+        )
+        Spacer(Modifier.width(3.dp))
+        Text(label, style = GwTypography.Audit.copy(color = GwColors.fg300, fontSize = 9.sp))
+        Spacer(Modifier.width(3.dp))
+        Text(value, style = GwTypography.Audit.copy(color = valueColor, fontSize = 10.sp))
+    }
+}
+
+// Keep old StatusChip for backward compat if used elsewhere
 @Composable
 fun StatusChip(label: String, value: String, valueColor: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -135,8 +171,8 @@ private fun BatteryIndicator(pct: Int) {
         // Simple bar
         Box(
             modifier = Modifier
-                .width(22.dp)
-                .height(10.dp)
+                .width(20.dp)
+                .height(9.dp)
                 .border(1.dp, GwColors.fg300, RoundedCornerShape(2.dp))
                 .padding(1.dp),
         ) {
@@ -148,7 +184,7 @@ private fun BatteryIndicator(pct: Int) {
             )
         }
         Spacer(Modifier.width(3.dp))
-        Text("$pct%", style = GwTypography.Audit.copy(color = GwColors.fg200))
+        Text("$pct%", style = GwTypography.Audit.copy(color = GwColors.fg200, fontSize = 9.sp))
     }
 }
 
@@ -182,7 +218,7 @@ fun GlobalAlertBanner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(38.dp)
             .background(bgColor)
             .border(width = 1.dp, color = GwColors.critRed),
         verticalAlignment = Alignment.CenterVertically,
@@ -194,10 +230,10 @@ fun GlobalAlertBanner(
                 .fillMaxHeight()
                 .background(GwColors.critRed)
         )
-        Spacer(Modifier.width(GwSpacing.sp3.dp))
+        Spacer(Modifier.width(GwSpacing.sp2.dp))
 
         // Warning icon
-        Text("⚠", style = GwTypography.H2.copy(color = GwColors.critRed))
+        Text("⚠", style = GwTypography.H2.copy(color = GwColors.critRed, fontSize = 16.sp))
         Spacer(Modifier.width(GwSpacing.sp2.dp))
 
         // CRITICAL badge
@@ -205,39 +241,32 @@ fun GlobalAlertBanner(
             modifier = Modifier
                 .clip(RoundedCornerShape(GwRadii.r1.dp))
                 .background(GwColors.critRed)
-                .padding(horizontal = 6.dp, vertical = 2.dp),
+                .padding(horizontal = 5.dp, vertical = 1.dp),
         ) {
-            Text("CRITICAL", style = GwTypography.Label.copy(color = GwColors.fg000))
+            Text("CRITICAL", style = GwTypography.Label.copy(color = GwColors.fg000, fontSize = 10.sp))
         }
-        Spacer(Modifier.width(GwSpacing.sp3.dp))
+        Spacer(Modifier.width(GwSpacing.sp2.dp))
 
-        // Soldier info
+        // Soldier info — compact
         if (soldier != null) {
             Text(
                 text = "POS-${soldier.pos.toString().padStart(2,'0')} ${soldier.last}",
-                style = GwTypography.Mono.copy(color = GwColors.fg000),
-            )
-            Spacer(Modifier.width(GwSpacing.sp2.dp))
-            Text("·", style = GwTypography.Mono.copy(color = GwColors.fg300))
-            Spacer(Modifier.width(GwSpacing.sp2.dp))
-            Text(
-                text = soldier.role.display,
-                style = GwTypography.Mono.copy(color = GwColors.fg200),
+                style = GwTypography.Mono.copy(color = GwColors.fg000, fontSize = 12.sp),
             )
             Spacer(Modifier.width(GwSpacing.sp2.dp))
             Text("·", style = GwTypography.Mono.copy(color = GwColors.fg300))
             Spacer(Modifier.width(GwSpacing.sp2.dp))
             Text(
                 text = soldier.id,
-                style = GwTypography.Mono.copy(color = GwColors.fg200),
+                style = GwTypography.Mono.copy(color = GwColors.fg200, fontSize = 12.sp),
             )
-            Spacer(Modifier.width(GwSpacing.sp3.dp))
+            Spacer(Modifier.width(GwSpacing.sp2.dp))
         }
 
         // Alert message
         Text(
             text = alert.message,
-            style = GwTypography.Mono.copy(color = GwColors.fg000),
+            style = GwTypography.Mono.copy(color = GwColors.fg000, fontSize = 11.sp),
             modifier = Modifier.weight(1f),
         )
 
@@ -245,10 +274,8 @@ fun GlobalAlertBanner(
         if (soldier != null) {
             QuickVital("HR", soldier.hr.toString())
             Spacer(Modifier.width(GwSpacing.sp2.dp))
-            QuickVital("SpO₂", if (soldier.spo2 > 0) soldier.spo2.toString() else "--")
-            Spacer(Modifier.width(GwSpacing.sp2.dp))
             QuickVital("RISK", String.format("%.1f", soldier.risk))
-            Spacer(Modifier.width(GwSpacing.sp3.dp))
+            Spacer(Modifier.width(GwSpacing.sp2.dp))
 
             // T+Xs timer
             val tColor = GwColors.stateLive
@@ -256,23 +283,23 @@ fun GlobalAlertBanner(
                 text = "T+${alert.triggeredSec}s",
                 style = GwTypography.MonoSm.copy(color = tColor),
             )
-            Spacer(Modifier.width(GwSpacing.sp4.dp))
+            Spacer(Modifier.width(GwSpacing.sp3.dp))
         }
 
         // Action buttons
         AlertActionButton("VIEW", Color(0xFF1A3040), onClick = onView)
-        Spacer(Modifier.width(GwSpacing.sp2.dp))
+        Spacer(Modifier.width(GwSpacing.sp1.dp))
         AlertActionButton("ACK",  Color(0xFF2A1E0A), onClick = onAck)
-        Spacer(Modifier.width(GwSpacing.sp2.dp))
+        Spacer(Modifier.width(GwSpacing.sp1.dp))
         AlertActionButton("CASEVAC", GwColors.critRed, onClick = onCasevac)
-        Spacer(Modifier.width(GwSpacing.sp3.dp))
+        Spacer(Modifier.width(GwSpacing.sp2.dp))
     }
 }
 
 @Composable
 private fun QuickVital(label: String, value: String) {
     Row(verticalAlignment = Alignment.Bottom) {
-        Text(label, style = GwTypography.Audit.copy(color = GwColors.fg300))
+        Text(label, style = GwTypography.Audit.copy(color = GwColors.fg300, fontSize = 9.sp))
         Spacer(Modifier.width(2.dp))
         Text(value, style = GwTypography.MonoSm.copy(color = GwColors.fg000))
     }
@@ -282,16 +309,16 @@ private fun QuickVital(label: String, value: String) {
 private fun AlertActionButton(label: String, bg: Color, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .height(28.dp)
+            .height(24.dp)
             .clip(RoundedCornerShape(GwRadii.r1.dp))
             .background(bg)
             .border(1.dp, GwColors.strokeStrong, RoundedCornerShape(GwRadii.r1.dp))
             .clickable { onClick() }
-            .padding(horizontal = 10.dp),
+            .padding(horizontal = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, style = GwTypography.Label.copy(color = GwColors.fg000,
-            fontSize = 12.sp))
+            fontSize = 10.sp))
     }
 }
 
@@ -333,7 +360,8 @@ fun Breadcrumb(
                 Text(
                     text = item.label,
                     style = GwTypography.Mono.copy(
-                        color = if (isLast) GwColors.fg000 else GwColors.fg300
+                        color = if (isLast) GwColors.fg000 else GwColors.fg300,
+                        fontSize = 12.sp,
                     ),
                 )
             }
@@ -342,7 +370,7 @@ fun Breadcrumb(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FOOTER STATUS BAR
+// FOOTER STATUS BAR — less dense
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
@@ -355,44 +383,33 @@ fun FootStatusBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(28.dp)
+            .height(24.dp)
             .background(Color(0xFF080A08))
-            .border(topStart = 1.dp, topEnd = 1.dp, color = GwColors.strokeHairline,
-                shape = RoundedCornerShape(0.dp))
+            .border(width = 1.dp, color = GwColors.strokeHairline)
             .padding(horizontal = GwSpacing.sp3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         FootCell("MESH", "$meshOnline/$meshTotal")
-        FootCell("AVG LAT", "142ms")
+        FootCell("LAT", "142ms")
         FootCell("DATA", "2.4 KB/s")
         Spacer(Modifier.weight(1f))
         Text(
             text = lastMsg,
-            style = GwTypography.Audit.copy(color = GwColors.fg300),
+            style = GwTypography.Audit.copy(color = GwColors.fg300, fontSize = 9.sp),
             maxLines = 1,
         )
-        Spacer(Modifier.weight(1f))
-        FootCell("OPS CHAN", "FH-7 / 2400")
     }
 }
 
 @Composable
 private fun FootCell(label: String, value: String) {
     Row(
-        modifier = Modifier.padding(end = GwSpacing.sp5.dp),
+        modifier = Modifier.padding(end = GwSpacing.sp4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = GwTypography.Audit.copy(color = GwColors.fg300))
-        Spacer(Modifier.width(4.dp))
-        Text(value, style = GwTypography.Audit.copy(color = GwColors.fg100))
+        Text(label, style = GwTypography.Audit.copy(color = GwColors.fg300, fontSize = 9.sp))
+        Spacer(Modifier.width(3.dp))
+        Text(value, style = GwTypography.Audit.copy(color = GwColors.fg100, fontSize = 9.sp))
     }
 }
 
-// Extension for border only on specific sides
-@Composable
-private fun Modifier.border(
-    topStart: androidx.compose.ui.unit.Dp = 0.dp,
-    topEnd: androidx.compose.ui.unit.Dp = 0.dp,
-    color: Color,
-    shape: RoundedCornerShape,
-): Modifier = this
