@@ -392,6 +392,59 @@ fun TacticalDashboard(
                     }
                 }
 
+                // ── LIVE WATCH PANEL — shown when a real watch is connected ──
+                if (isLive && liveStream != null) {
+                    val assess = liveStream.assessment
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(GwColors.bg100)
+                            .padding(horizontal = GwSpacing.sp4.dp, vertical = GwSpacing.sp3.dp),
+                    ) {
+                        // Critical banner
+                        if (assess?.overallTone == HealthTone.CRITICAL && assess.suspected != null) {
+                            CriticalBanner(
+                                title = assess.suspected.replace('_', ' '),
+                                body  = "${liveStream.casualty.id} · HR ${liveLatest?.hrBpm ?: "--"} bpm · LIVE WATCH",
+                                onAck = {},
+                            )
+                            Spacer(Modifier.height(GwSpacing.sp3.dp))
+                        }
+                        // Vital tiles row
+                        val mv = when (liveLatest?.movementClass) {
+                            0 -> "STILL"; 1 -> "WALK"; 2 -> "RUN"
+                            3 -> "FALL!"; 4 -> "SEIZURE!"; else -> "--"
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp3.dp)) {
+                            VitalTile(
+                                label    = "HR",
+                                value    = (liveLatest?.hrBpm ?: "--").toString(),
+                                unit     = "bpm",
+                                trend    = "live · ${liveStream.casualty.name}",
+                                tone     = assess?.hrTone ?: com.gltech.guardianwatch.casualty.HealthTone.OK,
+                                modifier = Modifier.weight(1f),
+                            )
+                            VitalTile(
+                                label    = "MOVE",
+                                value    = mv,
+                                unit     = "",
+                                trend    = "accel · ${liveLatest?.accelMagG?.let { "%.2f g".format(it) } ?: "--"}",
+                                tone     = com.gltech.guardianwatch.casualty.HealthTone.OK,
+                                modifier = Modifier.weight(1f),
+                            )
+                            VitalTile(
+                                label    = "BATT",
+                                value    = (liveLatest?.batteryPct ?: 0).toString(),
+                                unit     = "%",
+                                trend    = "RSSI ${liveLatest?.rssiDbm ?: "--"} dBm",
+                                tone     = com.gltech.guardianwatch.casualty.HealthTone.OK,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(GwColors.strokeHairline))
+                }
+
                 // Content
                 Box(
                     modifier = Modifier
