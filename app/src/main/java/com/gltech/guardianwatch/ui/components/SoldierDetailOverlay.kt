@@ -10,7 +10,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +50,7 @@ import kotlin.random.Random
 fun SoldierDetailOverlay(
     soldier: Soldier,
     onClose: () -> Unit,
+    onRemove: (() -> Unit)? = null,
 ) {
     Dialog(
         onDismissRequest = onClose,
@@ -89,7 +93,7 @@ fun SoldierDetailOverlay(
                         AssessmentColumn(soldier, accentColor, Modifier.weight(1f))
 
                         // COL 3 — Gear + Actions
-                        GearColumn(soldier, Modifier.weight(1f))
+                        GearColumn(soldier, onRemove, Modifier.weight(1f))
                     }
 
                     // Footer
@@ -382,7 +386,8 @@ private fun PosRow(label: String, value: String) {
 // ─── COL 3: GEAR + ACTIONS ───────────────────────────────────────────────────
 
 @Composable
-private fun GearColumn(soldier: Soldier, modifier: Modifier) {
+private fun GearColumn(soldier: Soldier, onRemove: (() -> Unit)?, modifier: Modifier) {
+    var confirmDestruct by remember { mutableStateOf(false) }
     Column(modifier = modifier.verticalScroll(rememberScrollState())) {
         SectionLabel("ציוד וחיישנים")
 
@@ -416,6 +421,48 @@ private fun GearColumn(soldier: Soldier, modifier: Modifier) {
         Spacer(Modifier.height(GwSpacing.sp3.dp))
         ActionButton("היסטוריה", GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
             Modifier.fillMaxWidth()) {}
+
+        if (onRemove != null) {
+            Spacer(Modifier.height(GwSpacing.sp4.dp))
+            SectionLabel("⊗  SELF DESTRUCT")
+
+            if (!confirmDestruct) {
+                ActionButton(
+                    "REMOVE SOLDIER",
+                    GwColors.critRedBg, GwColors.critRed, GwColors.critRed,
+                    Modifier.fillMaxWidth(),
+                ) { confirmDestruct = true }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(GwRadii.r2.dp))
+                        .background(GwColors.critRedBg)
+                        .border(1.dp, GwColors.critRed, RoundedCornerShape(GwRadii.r2.dp))
+                        .padding(GwSpacing.sp3.dp),
+                    verticalArrangement = Arrangement.spacedBy(GwSpacing.sp2.dp),
+                ) {
+                    Text(
+                        "הסרת חייל מהמערכת?",
+                        style = GwTypography.Label.copy(color = GwColors.critRed),
+                    )
+                    Text(
+                        "פעולה זו בלתי הפיכה",
+                        style = GwTypography.Audit.copy(color = GwColors.fg300),
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp2.dp)) {
+                        ActionButton(
+                            "CANCEL", GwColors.bg300, GwColors.strokeDefault, GwColors.fg200,
+                            Modifier.weight(1f),
+                        ) { confirmDestruct = false }
+                        ActionButton(
+                            "CONFIRM", GwColors.critRed, GwColors.critRed, GwColors.fg000,
+                            Modifier.weight(1f),
+                        ) { onRemove() }
+                    }
+                }
+            }
+        }
     }
 }
 

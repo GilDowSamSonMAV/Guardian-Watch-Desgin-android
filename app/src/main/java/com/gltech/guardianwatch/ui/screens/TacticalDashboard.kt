@@ -68,9 +68,7 @@ fun TacticalDashboard(
     var removedSoldierIds  by remember { mutableStateOf(setOf<String>()) }
     var time            by remember { mutableStateOf(nowUtc()) }
 
-    // Simulation-generated injury alert
-    var simAlertActive  by remember { mutableStateOf(false) }
-    var simAlert        by remember { mutableStateOf<CriticalAlert?>(null) }
+    // Sim injury alert — derived reactively from simulation.pendingNotifications
 
     // ── Build initial static positions once (for TacMap and sim seeding) ──
     val staticPositions = remember {
@@ -82,37 +80,16 @@ fun TacticalDashboard(
         while (true) {
             kotlinx.coroutines.delay(1000)
             time = nowUtc()
-            if (simulation.isRunning) {
-                simulation.step()
-                // Check for injury notification
-                if (simulation.injuryNotificationPending) {
-                    val injId = simulation.injuredSoldierId
-                    if (injId != null) {
-                        simAlert = CriticalAlert(
-                            soldierId = injId,
-                            type = "VITALS",
-                            message = "TACHYCARDIA · POSSIBLE HEMORRHAGE · AUTO-DETECT",
-                            triggeredSec = 0,
-                            acknowledged = false,
-                        )
-                        simAlertActive = true
-                    }
-                    simulation.consumeInjuryNotification()
-                }
-            }
+            if (simulation.isRunning) simulation.step()
         }
     }
 
-    // ★ Auto re-alert every 10s if there are CRITICAL soldiers — makes it impossible to ignore
+    // Re-raise the static demo alert every 10 s when simulation is NOT running
     LaunchedEffect(Unit) {
         while (true) {
             kotlinx.coroutines.delay(10_000)
-            val hasCritical = DemoData.ACTIVE_ALERTS.isNotEmpty() ||
-                (simulation.isRunning && simulation.liveVitals.values.any {
-                    it.status == SoldierStatus.CRITICAL
-                })
-            if (hasCritical) {
-                alertActive = true   // re-raise the static alert
+            if (!simulation.isRunning && DemoData.ACTIVE_ALERTS.isNotEmpty()) {
+                alertActive = true
             }
         }
     }
@@ -144,8 +121,17 @@ fun TacticalDashboard(
         else -> null
     }
 
-    // Choose which alert is active — sim alert takes priority
-    val activeAlert = if (simAlertActive && simAlert != null) simAlert else if (alertActive) alert else null
+    // Derive banner alert from pending notifications (sim takes priority over static)
+    val simActiveAlert: CriticalAlert? = simulation.pendingNotifications.lastOrNull()?.let { id ->
+        CriticalAlert(
+            soldierId    = id,
+            type         = "VITALS",
+            message      = "TACHYCARDIA · POSSIBLE HEMORRHAGE · AUTO-DETECT",
+            triggeredSec = 0,
+            acknowledged = false,
+        )
+    }
+    val activeAlert = simActiveAlert ?: if (alertActive && !simulation.isRunning) alert else null
     val alertSoldier: Soldier? = activeAlert?.let { DemoData.findSoldier(it.soldierId) }
         ?.let { effectiveSoldier(it) }
 
@@ -230,8 +216,9 @@ fun TacticalDashboard(
                 soldier   = alertSoldier,
                 onView    = onAlertView,
                 onAck     = {
-                    alertActive = false
-                    simAlertActive = false
+                    val latest = simulation.pendingNotifications.lastOrNull()
+                    if (latest != null) simulation.dismissNotification(latest)
+                    else alertActive = false
                 },
             )
         }
@@ -282,13 +269,8 @@ fun TacticalDashboard(
                         SimulationButton(
                             isRunning = simulation.isRunning,
                             onToggle = {
-                                if (simulation.isRunning) {
-                                    simulation.stop()
-                                    simAlertActive = false
-                                    simAlert = null
-                                } else {
-                                    simulation.start(allSoldiers, staticPositions)
-                                }
+                                if (simulation.isRunning) simulation.stop()
+                                else simulation.start(allSoldiers, staticPositions)
                             },
                         )
                     }
@@ -402,11 +384,9 @@ fun TacticalDashboard(
                 FootStatusBar(
                     meshOnline = meshOnline,
                     meshTotal  = allSoldiers.size,
-                    lastMsg    = if (simAlertActive && simAlert != null) {
-                        "[${time}] ${simAlert!!.soldierId} vitals threshold breach · auto-flag CRITICAL"
-                    } else {
-                        "[12:42:18] ALEPH-2A-02 vitals threshold breach · auto-flag CRITICAL"
-                    },
+                    lastMsg    = simulation.pendingNotifications.lastOrNull()?.let { id ->
+                        "[$time] $id vitals threshold breach · auto-flag CRITICAL"
+                    } ?: "[12:42:18] ALEPH-2A-02 vitals threshold breach · auto-flag CRITICAL",
                 )
             }
             // Right-side divider
@@ -433,12 +413,11 @@ fun TacticalDashboard(
         // (Rendered as part of the parent Box if this is in a Box; here we handle as overlay below)
     }
 
-    // ── INJURY NOTIFICATION OVERLAY ──
-    if (simAlertActive && simAlert != null) {
-        InjuryNotificationOverlay(
-            soldierName = DemoData.findSoldier(simAlert!!.soldierId)?.last ?: "UNKNOWN",
-            soldierId   = simAlert!!.soldierId,
-            onDismiss   = { /* stays until ACK on banner */ },
+    // ── INJURY NOTIFICATION PANEL — stacks one card per pending injury, no auto-dismiss ──
+    if (simulation.pendingNotifications.isNotEmpty()) {
+        InjuryNotificationPanel(
+            injuries  = simulation.pendingNotifications.toList(),
+            onDismiss = { simulation.dismissNotification(it) },
         )
     }
 
@@ -450,8 +429,12 @@ fun TacticalDashboard(
         val soldier = DemoData.findSoldier(soldierId)?.let { effectiveSoldier(it) }
         if (soldier != null) {
             SoldierDetailOverlay(
-                soldier = soldier,
-                onClose = { selectedSoldier = null },
+                soldier  = soldier,
+                onClose  = { selectedSoldier = null },
+                onRemove = {
+                    removedSoldierIds = removedSoldierIds + soldierId
+                    selectedSoldier = null
+                },
             )
         }
     }
@@ -526,99 +509,104 @@ private fun SimulationButton(isRunning: Boolean, onToggle: () -> Unit) {
     }
 }
 
-// ─── INJURY NOTIFICATION OVERLAY ─────────────────────────────────────────────
+// ─── INJURY NOTIFICATION PANEL — persistent, stacks one card per injury ──────
 
 @Composable
-private fun InjuryNotificationOverlay(
-    soldierName: String,
-    soldierId: String,
-    onDismiss: () -> Unit,
+private fun InjuryNotificationPanel(
+    injuries: List<String>,
+    onDismiss: (String) -> Unit,
 ) {
-    // Auto-dismiss after 6 seconds
-    var visible by remember { mutableStateOf(true) }
-    LaunchedEffect(Unit) {
-        delay(6000)
-        visible = false
-    }
-
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(tween(300)) + slideInVertically(tween(400)) { -it },
-        exit  = fadeOut(tween(500)) + slideOutVertically(tween(400)) { -it },
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter,
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)),
-            contentAlignment = Alignment.Center,
+                .width(560.dp)
+                .padding(top = 8.dp, start = 8.dp, end = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .width(480.dp)
-                    .clip(RoundedCornerShape(GwRadii.r2.dp))
-                    .background(Color(0xFF2A0508))
-                    .border(2.dp, GwColors.critRed, RoundedCornerShape(GwRadii.r2.dp))
-                    .padding(GwSpacing.sp6.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                // Pulsing warning icon
-                val pulse = rememberInfiniteTransition(label = "injPulse")
-                val pAlpha by pulse.animateFloat(
-                    initialValue = 0.5f, targetValue = 1.0f,
-                    animationSpec = infiniteRepeatable(tween(600), RepeatMode.Reverse),
-                    label = "injAlpha",
-                )
-
-                Text(
-                    "⚠",
-                    style = GwTypography.H1.copy(
-                        color = GwColors.critRed.copy(alpha = pAlpha),
-                        fontSize = 48.sp,
-                    ),
-                )
-                Spacer(Modifier.height(GwSpacing.sp3.dp))
-
-                Text(
-                    "CASUALTY DETECTED",
-                    style = GwTypography.H2.copy(
-                        color = GwColors.critRed,
-                        letterSpacing = 3.sp,
-                    ),
-                )
-                Spacer(Modifier.height(GwSpacing.sp2.dp))
-
-                Text(
-                    "$soldierName · $soldierId",
-                    style = GwTypography.MonoLg.copy(
-                        color = GwColors.fg000,
-                        fontSize = 22.sp,
-                    ),
-                )
-                Spacer(Modifier.height(GwSpacing.sp2.dp))
-
-                Text(
-                    "TACHYCARDIA · POSSIBLE HEMORRHAGE",
-                    style = GwTypography.Mono.copy(color = GwColors.warnAmber),
-                )
-                Spacer(Modifier.height(GwSpacing.sp4.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp4.dp),
-                ) {
-                    // Vitals preview boxes
-                    NotifVitalBox("HR", "185+", GwColors.critRed)
-                    NotifVitalBox("BR", "30+", GwColors.warnAmber)
-                    NotifVitalBox("SpO₂", "<90%", GwColors.critRed)
-                    NotifVitalBox("RISK", "8.0+", GwColors.critRed)
-                }
-
-                Spacer(Modifier.height(GwSpacing.sp4.dp))
-
-                Text(
-                    "AUTO-FLAGGED · ACKNOWLEDGE ON BANNER",
-                    style = GwTypography.Audit.copy(color = GwColors.fg300),
+            // Most recent injury on top
+            injuries.reversed().forEach { id ->
+                val soldier = DemoData.findSoldier(id)
+                InjuryNotificationCard(
+                    soldierName = soldier?.last ?: "UNKNOWN",
+                    soldierId   = id,
+                    onClose     = { onDismiss(id) },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun InjuryNotificationCard(
+    soldierName: String,
+    soldierId: String,
+    onClose: () -> Unit,
+) {
+    val pulse = rememberInfiniteTransition(label = "notifPulse")
+    val borderAlpha by pulse.animateFloat(
+        initialValue = 0.4f,
+        targetValue  = 1.0f,
+        animationSpec = infiniteRepeatable(tween(500), RepeatMode.Reverse),
+        label = "notifBorderAlpha",
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(GwRadii.r2.dp))
+            .background(Color(0xFF2A0508).copy(alpha = 0.96f))
+            .border(
+                1.5.dp,
+                GwColors.critRed.copy(alpha = borderAlpha),
+                RoundedCornerShape(GwRadii.r2.dp),
+            )
+            .padding(horizontal = GwSpacing.sp4.dp, vertical = GwSpacing.sp3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("⚠", style = GwTypography.H2.copy(color = GwColors.critRed, fontSize = 20.sp))
+        Spacer(Modifier.width(GwSpacing.sp3.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                "CASUALTY DETECTED",
+                style = GwTypography.Label.copy(
+                    color = GwColors.critRed, fontSize = 10.sp, letterSpacing = 2.sp,
+                ),
+            )
+            Text(
+                "$soldierName · $soldierId",
+                style = GwTypography.MonoLg.copy(color = GwColors.fg000),
+            )
+            Text(
+                "TACHYCARDIA · POSSIBLE HEMORRHAGE · AUTO-DETECT",
+                style = GwTypography.Audit.copy(color = GwColors.warnAmber),
+            )
+        }
+
+        Spacer(Modifier.width(GwSpacing.sp4.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp3.dp)) {
+            NotifVitalBox("HR",   "185+", GwColors.critRed)
+            NotifVitalBox("BR",   "30+",  GwColors.warnAmber)
+            NotifVitalBox("SpO₂", "<90%", GwColors.critRed)
+        }
+
+        Spacer(Modifier.width(GwSpacing.sp4.dp))
+
+        Box(
+            modifier = Modifier
+                .height(GwSpacing.sp7.dp)
+                .clip(RoundedCornerShape(GwRadii.r1.dp))
+                .background(GwColors.bg300)
+                .border(1.dp, GwColors.strokeDefault, RoundedCornerShape(GwRadii.r1.dp))
+                .clickable { onClose() }
+                .padding(horizontal = GwSpacing.sp4.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("✕  CLOSE", style = GwTypography.Label.copy(color = GwColors.fg200, fontSize = 11.sp))
         }
     }
 }
