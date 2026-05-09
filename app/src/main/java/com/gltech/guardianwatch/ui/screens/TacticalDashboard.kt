@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gltech.guardianwatch.ble.CasualtyStream
+import com.gltech.guardianwatch.casualty.HealthTone
 import com.gltech.guardianwatch.model.*
 import com.gltech.guardianwatch.ui.components.*
 import com.gltech.guardianwatch.ui.theme.GwColors
@@ -55,7 +57,14 @@ sealed class TacNavLevel {
 fun TacticalDashboard(
     company: Company = DemoData.COMPANY,
     alert: CriticalAlert? = DemoData.CRITICAL_ALERT,
+    streams: Map<String, CasualtyStream> = emptyMap(),
+    onBack: () -> Unit = {},
 ) {
+    // ── Live BLE watch stream (first connected watch, if any) ──
+    val liveStream = streams.values.firstOrNull()
+    val liveLatest = liveStream?.latest
+    val isLive = liveLatest != null
+
     // ── Simulation engine (single instance per dashboard lifecycle) ──
     val simulation = remember { SimulationEngine() }
 
@@ -121,7 +130,18 @@ fun TacticalDashboard(
         else -> null
     }
 
-    // Derive banner alert from pending notifications (sim takes priority over static)
+    // Derive banner alert — live BLE takes highest priority, then sim, then static demo
+    val bleAlert: CriticalAlert? = run {
+        val s = liveStream ?: return@run null
+        val a = s.assessment?.takeIf { it.overallTone == HealthTone.CRITICAL } ?: return@run null
+        CriticalAlert(
+            soldierId    = s.casualty.id,
+            type         = "VITALS",
+            message      = (a.suspected?.replace('_', ' ') ?: "VITALS THRESHOLD BREACH") + " · LIVE WATCH",
+            triggeredSec = 0,
+            acknowledged = false,
+        )
+    }
     val simActiveAlert: CriticalAlert? = simulation.pendingNotifications.lastOrNull()?.let { id ->
         CriticalAlert(
             soldierId    = id,
@@ -131,7 +151,7 @@ fun TacticalDashboard(
             acknowledged = false,
         )
     }
-    val activeAlert = simActiveAlert ?: if (alertActive && !simulation.isRunning) alert else null
+    val activeAlert = bleAlert ?: simActiveAlert ?: if (alertActive && !simulation.isRunning) alert else null
     val alertSoldier: Soldier? = activeAlert?.let { DemoData.findSoldier(it.soldierId) }
         ?.let { effectiveSoldier(it) }
 
@@ -263,6 +283,16 @@ fun TacticalDashboard(
                                 text  = "${company.callsign} · TACTICAL MEDICAL OPS",
                                 style = GwTypography.Audit.copy(color = GwColors.infoCyan),
                             )
+                            if (isLive) {
+                                val mv = when (liveLatest?.movementClass) {
+                                    0 -> "STILL"; 1 -> "WALK"; 2 -> "RUN"
+                                    3 -> "FALL!"; 4 -> "SEIZURE!" else -> "--"
+                                }
+                                Text(
+                                    text  = "● LIVE · ${liveStream!!.casualty.name} · HR ${liveLatest?.hrBpm ?: "--"} bpm · $mv · BATT ${liveLatest?.batteryPct ?: "--"}%",
+                                    style = GwTypography.Audit.copy(color = GwColors.stateLive),
+                                )
+                            }
                         }
 
                         // ★ SIMULATION BUTTON
@@ -273,6 +303,23 @@ fun TacticalDashboard(
                                 else simulation.start(allSoldiers, staticPositions)
                             },
                         )
+                        Spacer(Modifier.width(GwSpacing.sp3.dp))
+                        // ← MENU BUTTON
+                        Box(
+                            modifier = Modifier
+                                .height(32.dp)
+                                .clip(RoundedCornerShape(GwRadii.r1.dp))
+                                .background(GwColors.bg300)
+                                .border(1.dp, GwColors.strokeDefault, RoundedCornerShape(GwRadii.r1.dp))
+                                .clickable { onBack() }
+                                .padding(horizontal = 14.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "← MENU",
+                                style = GwTypography.Label.copy(color = GwColors.fg200, fontSize = 11.sp, letterSpacing = 1.sp),
+                            )
+                        }
                     }
                 }
 
@@ -382,9 +429,15 @@ fun TacticalDashboard(
 
                 // FOOT STATUS BAR
                 FootStatusBar(
-                    meshOnline = meshOnline,
-                    meshTotal  = allSoldiers.size,
-                    lastMsg    = simulation.pendingNotifications.lastOrNull()?.let { id ->
+                    meshOnline = if (isLive) streams.size else meshOnline,
+                    meshTotal  = if (isLive) streams.size else allSoldiers.size,
+                    lastMsg    = if (isLive) {
+                        val mv = when (liveLatest?.movementClass) {
+                            0 -> "STILL"; 1 -> "WALK"; 2 -> "RUN"
+                            3 -> "FALL"; 4 -> "SEIZURE"; else -> "--"
+                        }
+                        "[$time] LIVE · HR ${liveLatest?.hrBpm ?: "--"} bpm · MOVE $mv · BATT ${liveLatest?.batteryPct ?: "--"}% · RSSI ${liveLatest?.rssiDbm ?: "--"} dBm"
+                    } else simulation.pendingNotifications.lastOrNull()?.let { id ->
                         "[$time] $id vitals threshold breach · auto-flag CRITICAL"
                     } ?: "[12:42:18] ALEPH-2A-02 vitals threshold breach · auto-flag CRITICAL",
                 )

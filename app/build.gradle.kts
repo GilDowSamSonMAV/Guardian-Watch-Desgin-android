@@ -55,6 +55,10 @@ android {
             "-opt-in=kotlin.ExperimentalUnsignedTypes",
         )
     }
+    // Forces Kotlin compiler to use JDK 21
+    kotlin {
+        jvmToolchain(21)
+    }
 
     buildFeatures {
         compose = true
@@ -114,4 +118,7 @@ dependencies {
 
     // ----- Maps (OpenStreetMap — free, no API key) -----
     implementation("org.osmdroid:osmdroid-android:6.1.20")
+
+    // ----- Garmin SDK -----
+    implementation("com.garmin.connectiq:ciq-companion-app-sdk:2.3.0")
 }

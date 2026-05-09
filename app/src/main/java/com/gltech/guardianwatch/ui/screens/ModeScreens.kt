@@ -22,6 +22,7 @@ import com.gltech.guardianwatch.ui.theme.GwTypography
 @Composable
 fun SinglePairedScreen(
     stream: CasualtyStream?,
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -30,6 +31,10 @@ fun SinglePairedScreen(
             .background(GwColors.bg000)
             .padding(GwSpacing.sp5.dp),
     ) {
+        androidx.compose.material3.TextButton(onClick = onBack) {
+            Text("← MENU", style = GwTypography.Label.copy(color = GwColors.fg200))
+        }
+        androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.height(GwSpacing.sp3.dp))
         if (stream == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
@@ -100,6 +105,7 @@ fun SinglePairedScreen(
 fun RelayScreen(
     streams: Map<String, CasualtyStream>,
     upstreamConnected: Boolean,
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -108,6 +114,10 @@ fun RelayScreen(
             .background(GwColors.bg000)
             .padding(GwSpacing.sp5.dp),
     ) {
+        androidx.compose.material3.TextButton(onClick = onBack) {
+            Text("← MENU", style = GwTypography.Label.copy(color = GwColors.fg200))
+        }
+        androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.height(GwSpacing.sp3.dp))
         Text("RELAY NODE", style = GwTypography.H1.copy(color = GwColors.fg000))
         Spacer(Modifier.height(GwSpacing.sp1.dp))
         Text(

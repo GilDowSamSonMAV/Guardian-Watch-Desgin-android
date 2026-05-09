@@ -142,9 +142,19 @@ private fun App(
             onModeSelected = { picked -> scope.launch { modeController.setMode(picked) } },
             onPairWatchRequested = bleService?.let { { showPairingDialog = true } },
         )
-        AppMode.MEDIC_DASHBOARD -> TacticalDashboard()
-        AppMode.SINGLE_PAIRED -> SinglePairedScreen(stream = streams.values.firstOrNull())
-        AppMode.RELAY -> RelayScreen(streams = streams, upstreamConnected = false)
+        AppMode.MEDIC_DASHBOARD -> TacticalDashboard(
+            streams = streams,
+            onBack = { scope.launch { modeController.clear() } },
+        )
+        AppMode.SINGLE_PAIRED -> SinglePairedScreen(
+            stream = streams.values.firstOrNull(),
+            onBack = { scope.launch { modeController.clear() } },
+        )
+        AppMode.RELAY -> RelayScreen(
+            streams = streams,
+            upstreamConnected = false,
+            onBack = { scope.launch { modeController.clear() } },
+        )
     }
 
     val svc = bleService
