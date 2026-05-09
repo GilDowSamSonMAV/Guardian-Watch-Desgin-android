@@ -73,14 +73,7 @@ class MainActivity : ComponentActivity() {
         modeController = ModeController(this)
         kioskController = KioskController(this)
 
-        // Auto-select Medic Dashboard on first launch (MVP default mode).
-        lifecycleScope.launch {
-            modeController.currentMode.collect { mode ->
-                if (mode == null) {
-                    modeController.setMode(com.gltech.guardianwatch.mode.AppMode.MEDIC_DASHBOARD)
-                }
-            }
-        }
+        // Auto-select removed so user can use ModeSelectorScreen to pair watches.
 
         // Request permissions on first boot — required before BLE service starts.
         requestRuntimePermissions()
