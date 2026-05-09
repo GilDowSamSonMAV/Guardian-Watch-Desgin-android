@@ -73,7 +73,10 @@ class MainActivity : ComponentActivity() {
         modeController = ModeController(this)
         kioskController = KioskController(this)
 
-        // Auto-select removed so user can use ModeSelectorScreen to pair watches.
+        // Force Mode Selector screen every launch during testing
+        lifecycleScope.launch {
+            modeController.clear()
+        }
 
         // Request permissions on first boot — required before BLE service starts.
         requestRuntimePermissions()
