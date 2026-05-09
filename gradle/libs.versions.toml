@@ -1,8 +1,8 @@
 [versions]
 # ===== Core toolchain =====
 agp = "8.7.3"
-kotlin = "2.3.0"
-ksp = "2.3.0-1.0.28"
+kotlin = "2.1.20"
+ksp = "2.1.20-1.0.31"
 
 # ===== Compose =====
 composeBom = "2026.03.00"
