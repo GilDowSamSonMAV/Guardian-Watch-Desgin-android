@@ -23,6 +23,7 @@ import com.gltech.guardianwatch.ui.theme.GwTypography
 fun SinglePairedScreen(
     stream: CasualtyStream?,
     onBack: () -> Unit = {},
+    onPairWatch: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -31,8 +32,16 @@ fun SinglePairedScreen(
             .background(GwColors.bg000)
             .padding(GwSpacing.sp5.dp),
     ) {
-        androidx.compose.material3.TextButton(onClick = onBack) {
-            Text("← MENU", style = GwTypography.Label.copy(color = GwColors.fg200))
+        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            androidx.compose.material3.TextButton(onClick = onBack) {
+                Text("← MENU", style = GwTypography.Label.copy(color = GwColors.fg200))
+            }
+            if (onPairWatch != null) {
+                androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.width(GwSpacing.sp3.dp))
+                androidx.compose.material3.TextButton(onClick = onPairWatch) {
+                    Text("+ PAIR WATCH", style = GwTypography.Label.copy(color = GwColors.stateLive))
+                }
+            }
         }
         androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.height(GwSpacing.sp3.dp))
         if (stream == null) {

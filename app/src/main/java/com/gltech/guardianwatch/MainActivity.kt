@@ -145,10 +145,12 @@ private fun App(
         AppMode.MEDIC_DASHBOARD -> TacticalDashboard(
             streams = streams,
             onBack = { scope.launch { modeController.clear() } },
+            onPairWatch = bleService?.let { { showPairingDialog = true } },
         )
         AppMode.SINGLE_PAIRED -> SinglePairedScreen(
             stream = streams.values.firstOrNull(),
             onBack = { scope.launch { modeController.clear() } },
+            onPairWatch = bleService?.let { { showPairingDialog = true } },
         )
         AppMode.RELAY -> RelayScreen(
             streams = streams,

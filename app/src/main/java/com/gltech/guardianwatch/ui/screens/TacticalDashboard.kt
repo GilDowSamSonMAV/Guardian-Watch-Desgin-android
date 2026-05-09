@@ -59,6 +59,7 @@ fun TacticalDashboard(
     alert: CriticalAlert? = DemoData.CRITICAL_ALERT,
     streams: Map<String, CasualtyStream> = emptyMap(),
     onBack: () -> Unit = {},
+    onPairWatch: (() -> Unit)? = null,
 ) {
     // ── Live BLE watch stream (first connected watch, if any) ──
     val liveStream = streams.values.firstOrNull()
@@ -304,6 +305,25 @@ fun TacticalDashboard(
                             },
                         )
                         Spacer(Modifier.width(GwSpacing.sp3.dp))
+                        // PAIR WATCH BUTTON
+                        if (onPairWatch != null) {
+                            Box(
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .clip(RoundedCornerShape(GwRadii.r1.dp))
+                                    .background(GwColors.stateLive.copy(alpha = 0.15f))
+                                    .border(1.dp, GwColors.stateLive, RoundedCornerShape(GwRadii.r1.dp))
+                                    .clickable { onPairWatch() }
+                                    .padding(horizontal = 14.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    "+ PAIR WATCH",
+                                    style = GwTypography.Label.copy(color = GwColors.stateLive, fontSize = 11.sp, letterSpacing = 1.sp),
+                                )
+                            }
+                            Spacer(Modifier.width(GwSpacing.sp3.dp))
+                        }
                         // ← MENU BUTTON
                         Box(
                             modifier = Modifier
