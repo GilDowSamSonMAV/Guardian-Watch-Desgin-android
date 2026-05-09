@@ -200,7 +200,6 @@ fun GlobalAlertBanner(
     soldier: Soldier?,
     onView: () -> Unit,
     onAck: () -> Unit,
-    onCasevac: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // ★ AGGRESSIVE: fast pulse 350ms, strong alpha swing 0.45→1.0
@@ -301,9 +300,7 @@ fun GlobalAlertBanner(
         // Action buttons
         AlertActionButton(stringResource(R.string.view), Color(0xFF1A3040), onClick = onView)
         Spacer(Modifier.width(GwSpacing.sp1.dp))
-        AlertActionButton(stringResource(R.string.acknowledge),  Color(0xFF2A1E0A), onClick = onAck)
-        Spacer(Modifier.width(GwSpacing.sp1.dp))
-        AlertActionButton(stringResource(R.string.casevac), GwColors.critRed, onClick = onCasevac)
+        AlertActionButton(stringResource(R.string.acknowledge), Color(0xFF2A1E0A), onClick = onAck)
         Spacer(Modifier.width(GwSpacing.sp2.dp))
     }
 }

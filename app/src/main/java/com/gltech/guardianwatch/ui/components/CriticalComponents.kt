@@ -1,9 +1,11 @@
 package com.gltech.guardianwatch.ui.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.gltech.guardianwatch.casualty.Triage
 import com.gltech.guardianwatch.ui.theme.GwColors
@@ -182,11 +186,26 @@ fun CasualtyHeader(
 
 @Composable
 fun TriageGlyph(triage: Triage, size: Int = 24) {
+    if (triage == Triage.DELAYED) {
+        val fill = GwColors.triageDelayed
+        val stroke = GwColors.strokeStrong
+        Canvas(modifier = Modifier.size(size.dp)) {
+            val path = Path().apply {
+                moveTo(this@Canvas.size.width / 2f, 0f)
+                lineTo(this@Canvas.size.width, this@Canvas.size.height)
+                lineTo(0f, this@Canvas.size.height)
+                close()
+            }
+            drawPath(path, color = fill)
+            drawPath(path, color = stroke, style = Stroke(width = 1.dp.toPx()))
+        }
+        return
+    }
     val (color, shape) = when (triage) {
-        Triage.IMMEDIATE -> GwColors.triageImmediate to RoundedCornerShape(0.dp)  // square
-        Triage.DELAYED -> GwColors.triageDelayed to RoundedCornerShape(0.dp)      // triangle (approx)
-        Triage.MINOR -> GwColors.triageMinor to RoundedCornerShape(GwSpacing.sp1.dp)          // rounded
-        Triage.EXPECTANT -> GwColors.triageExpectant to RoundedCornerShape(size.dp / 2)  // circle
+        Triage.IMMEDIATE -> GwColors.triageImmediate to CutCornerShape(percent = 20)
+        Triage.MINOR -> GwColors.triageMinor to RoundedCornerShape(GwSpacing.sp1.dp)
+        Triage.EXPECTANT -> GwColors.triageExpectant to RoundedCornerShape(size.dp / 2)
+        Triage.DELAYED -> error("unreachable")
     }
     Box(
         modifier = Modifier

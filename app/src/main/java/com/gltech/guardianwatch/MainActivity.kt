@@ -49,7 +49,6 @@ class MainActivity : ComponentActivity() {
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             bleServiceState.value = (binder as? BleService.LocalBinder)?.service()
-            maybeSeedDemoCasualty()
         }
         override fun onServiceDisconnected(name: ComponentName?) {
             bleServiceState.value = null
@@ -127,23 +126,7 @@ class MainActivity : ComponentActivity() {
         if (missing.isNotEmpty()) permissionLauncher.launch(missing.toTypedArray())
     }
 
-    /** Demo seed for MVP: register a placeholder casualty so the UI is non-empty at launch. */
-    private fun maybeSeedDemoCasualty() {
-        lifecycleScope.launch {
-            if (vitalsRepository.streams.value.isEmpty()) {
-                val demo = Casualty(
-                    id = "CAS-0147",
-                    name = "Weiss, J.",
-                    age = 26,
-                    mgrs = "33R WN 72314 28005",
-                    triage = Triage.IMMEDIATE,
-                    watchDeviceAddress = "00:00:00:00:00:00",  // TODO replace with actual Instinct 2 MAC
-                    openedAtMs = System.currentTimeMillis(),
-                )
-                vitalsRepository.registerCasualty(demo)
-            }
-        }
-    }
+
 }
 
 @Composable
@@ -187,14 +170,14 @@ private fun App(
 
 /** Build a placeholder Casualty from a scanned device. The medic can edit
  *  name / age / MGRS / triage later (future feature). Auto-picks the next
- *  unused CAS-NNNN ID starting from 148 (the seeded demo casualty is 147). */
+ *  unused CAS-NNNN ID. */
 private fun buildCasualtyFromScan(
     scanned: ScannedDevice,
     existingIds: Collection<String>,
 ): Casualty {
     val nextIndex = existingIds
         .mapNotNull { it.removePrefix("CAS-").toIntOrNull() }
-        .maxOrNull()?.plus(1) ?: 148
+        .maxOrNull()?.plus(1) ?: 1
     return Casualty(
         id = "CAS-" + nextIndex.toString().padStart(4, '0'),
         name = scanned.name ?: "Unknown",

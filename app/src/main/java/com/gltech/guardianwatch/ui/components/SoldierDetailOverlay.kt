@@ -47,7 +47,6 @@ import kotlin.random.Random
 fun SoldierDetailOverlay(
     soldier: Soldier,
     onClose: () -> Unit,
-    onCasevac: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = onClose,
@@ -90,7 +89,7 @@ fun SoldierDetailOverlay(
                         AssessmentColumn(soldier, accentColor, Modifier.weight(1f))
 
                         // COL 3 — Gear + Actions
-                        GearColumn(soldier, onCasevac, Modifier.weight(1f))
+                        GearColumn(soldier, Modifier.weight(1f))
                     }
 
                     // Footer
@@ -383,7 +382,7 @@ private fun PosRow(label: String, value: String) {
 // ─── COL 3: GEAR + ACTIONS ───────────────────────────────────────────────────
 
 @Composable
-private fun GearColumn(soldier: Soldier, onCasevac: () -> Unit, modifier: Modifier) {
+private fun GearColumn(soldier: Soldier, modifier: Modifier) {
     Column(modifier = modifier.verticalScroll(rememberScrollState())) {
         SectionLabel("ציוד וחיישנים")
 
@@ -408,20 +407,15 @@ private fun GearColumn(soldier: Soldier, onCasevac: () -> Unit, modifier: Modifi
         Spacer(Modifier.height(GwSpacing.sp4.dp))
         SectionLabel("פעולות")
 
-        // 2×2 action grid
         Row(horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp3.dp)) {
-            ActionButton("קשר",   GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
+            ActionButton("קשר",      GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
                 Modifier.weight(1f)) {}
-            ActionButton("פינג",    GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
+            ActionButton("פינג",     GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
                 Modifier.weight(1f)) {}
         }
         Spacer(Modifier.height(GwSpacing.sp3.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(GwSpacing.sp3.dp)) {
-            ActionButton("היסטוריה", GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
-                Modifier.weight(1f)) {}
-            ActionButton("פינוי", GwColors.critRedBg, GwColors.critRed, GwColors.fg000,
-                Modifier.weight(1f), onCasevac)
-        }
+        ActionButton("היסטוריה", GwColors.bg300, GwColors.strokeDefault, GwColors.fg000,
+            Modifier.fillMaxWidth()) {}
     }
 }
 

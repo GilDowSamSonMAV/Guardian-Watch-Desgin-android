@@ -63,9 +63,9 @@ fun TacticalDashboard(
     var navLevel by remember { mutableStateOf<TacNavLevel>(
         TacNavLevel.Squad("PLT-2", "2A")   // open on the critical squad by default
     ) }
-    var selectedSoldier by remember { mutableStateOf<String?>(null) }
-    var showNineLine    by remember { mutableStateOf(false) }
-    var alertActive     by remember { mutableStateOf(alert != null) }
+    var selectedSoldier    by remember { mutableStateOf<String?>(null) }
+    var alertActive        by remember { mutableStateOf(alert != null) }
+    var removedSoldierIds  by remember { mutableStateOf(setOf<String>()) }
     var time            by remember { mutableStateOf(nowUtc()) }
 
     // Simulation-generated injury alert
@@ -233,7 +233,6 @@ fun TacticalDashboard(
                     alertActive = false
                     simAlertActive = false
                 },
-                onCasevac = { showNineLine = true; onAlertView() },
             )
         }
 
@@ -367,10 +366,6 @@ fun TacticalDashboard(
                                     if (sqId != null) onPickSquad(sqId)
                                     selectedSoldier = id
                                 },
-                                onCasevac = { id ->
-                                    selectedSoldier = id
-                                    showNineLine = true
-                                },
                             )
 
                         is TacNavLevel.Platoon -> {
@@ -388,10 +383,15 @@ fun TacticalDashboard(
                             val sq = DemoData.findSquad(level.squadId)
                             if (sq != null) {
                                 SquadView(
-                                    squad         = sq,
-                                    onPickSoldier = onPickSoldier,
-                                    selectedId    = selectedSoldier,
-                                    simulation    = simulation,
+                                    squad             = sq,
+                                    onPickSoldier     = onPickSoldier,
+                                    selectedId        = selectedSoldier,
+                                    simulation        = simulation,
+                                    removedSoldierIds = removedSoldierIds,
+                                    onRemoveSoldier   = { id ->
+                                        removedSoldierIds = removedSoldierIds + id
+                                        if (selectedSoldier == id) selectedSoldier = null
+                                    },
                                 )
                             }
                         }
@@ -450,21 +450,10 @@ fun TacticalDashboard(
         val soldier = DemoData.findSoldier(soldierId)?.let { effectiveSoldier(it) }
         if (soldier != null) {
             SoldierDetailOverlay(
-                soldier   = soldier,
-                onClose   = { selectedSoldier = null },
-                onCasevac = { showNineLine = true },
+                soldier = soldier,
+                onClose = { selectedSoldier = null },
             )
         }
-    }
-
-    // 9-Line CASEVAC
-    if (showNineLine) {
-        val casevacSoldier = selectedSoldier?.let { DemoData.findSoldier(it) }
-            ?: alertSoldier
-        NineLineOverlay(
-            soldier = casevacSoldier,
-            onClose = { showNineLine = false },
-        )
     }
 }
 

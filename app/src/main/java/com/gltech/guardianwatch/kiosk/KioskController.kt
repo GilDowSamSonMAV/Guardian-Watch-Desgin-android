@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import com.gltech.guardianwatch.BuildConfig
+import com.gltech.guardianwatch.MainActivity
 
 /**
  * Kiosk lifecycle helpers.
@@ -59,7 +60,7 @@ class KioskController(private val context: Context) {
             addCategory(android.content.Intent.CATEGORY_HOME)
             addCategory(android.content.Intent.CATEGORY_DEFAULT)
         }
-        val main = android.content.ComponentName(context, "com.gltech.guardianwatch.MainActivity")
+        val main = android.content.ComponentName(context, MainActivity::class.java)
         dpm.addPersistentPreferredActivity(adminComponent, filter, main)
     }
 

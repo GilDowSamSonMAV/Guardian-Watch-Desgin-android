@@ -316,9 +316,13 @@ fun SquadView(
     onPickSoldier: (String) -> Unit,
     selectedId: String?,
     simulation: SimulationEngine? = null,
+    removedSoldierIds: Set<String> = emptySet(),
+    onRemoveSoldier: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val soldiers = squad.soldiers.map { effectiveSoldier(it, simulation) }
+    val soldiers = squad.soldiers
+        .filter { it.id !in removedSoldierIds }
+        .map { effectiveSoldier(it, simulation) }
     val counts = statusCounts(soldiers)
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -345,10 +349,11 @@ fun SquadView(
                 ) {
                     pair.forEach { soldier ->
                         SoldierCard(
-                            soldier  = soldier,
-                            selected = soldier.id == selectedId,
-                            onClick  = { onPickSoldier(soldier.id) },
-                            modifier = Modifier.weight(1f),
+                            soldier   = soldier,
+                            selected  = soldier.id == selectedId,
+                            onClick   = { onPickSoldier(soldier.id) },
+                            onRemove  = onRemoveSoldier?.let { cb -> { cb(soldier.id) } },
+                            modifier  = Modifier.weight(1f),
                         )
                     }
                     // Pad if odd number
@@ -469,7 +474,6 @@ fun ViewMeta(label: String, sub: String, total: Int, counts: StatusCounts) {
 fun CasualtiesView(
     simulation: SimulationEngine? = null,
     onPickSoldier: (String) -> Unit,
-    onCasevac: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val wounded = DemoData.allWounded()
@@ -540,11 +544,10 @@ fun CasualtiesView(
                 wounded.forEach { (platoon, squad, rawSoldier) ->
                     val s = effectiveSoldier(rawSoldier, simulation)
                     CasualtyRow(
-                        soldier   = s,
+                        soldier     = s,
                         platoonName = platoon.name,
                         squadName   = squad.name,
-                        onView    = { onPickSoldier(s.id) },
-                        onCasevac = { onCasevac(s.id) },
+                        onView      = { onPickSoldier(s.id) },
                     )
                 }
                 Spacer(Modifier.height(GwSpacing.sp4.dp))
@@ -559,7 +562,6 @@ private fun CasualtyRow(
     platoonName: String,
     squadName: String,
     onView: () -> Unit,
-    onCasevac: () -> Unit,
 ) {
     val statusColor = soldier.status.color
     val isCritical  = soldier.status == SoldierStatus.CRITICAL
@@ -640,10 +642,6 @@ private fun CasualtyRow(
 
         // Actions
         ActionChip(stringResource(R.string.view), GwColors.bg300, GwColors.strokeDefault, GwColors.fg000, onView)
-        if (isCritical) {
-            Spacer(Modifier.width(GwSpacing.sp2.dp))
-            ActionChip(stringResource(R.string.casevac), GwColors.critRedBg, GwColors.critRed, GwColors.fg000, onCasevac)
-        }
     }
 }
 

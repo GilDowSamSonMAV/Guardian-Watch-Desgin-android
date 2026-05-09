@@ -25,6 +25,7 @@ class KioskAdminReceiver : DeviceAdminReceiver() {
     override fun onEnabled(context: Context, intent: Intent) {
         super.onEnabled(context, intent)
         Log.i(TAG, "Device admin enabled.")
+        KioskController(context).enableLockdown()
     }
 
     override fun onDisabled(context: Context, intent: Intent) {

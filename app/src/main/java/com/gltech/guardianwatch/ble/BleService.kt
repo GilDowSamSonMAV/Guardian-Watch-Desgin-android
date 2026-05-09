@@ -50,6 +50,7 @@ class BleService : LifecycleService() {
         super.onCreate()
         createChannelIfNeeded()
         startForegroundWithNotification(watchCount = 0)
+        vitalsRepository.loadPersistedCasualties().forEach { pairAndConnect(it) }
     }
 
     override fun onBind(intent: Intent): IBinder {

@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,8 +41,11 @@ fun SoldierCard(
     soldier: Soldier,
     selected: Boolean = false,
     onClick: () -> Unit,
+    onRemove: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    var confirmRemove by remember { mutableStateOf(false) }
+
     val statusColor = soldier.status.color
     val isCritical  = soldier.status == SoldierStatus.CRITICAL
     val isOffline   = soldier.status == SoldierStatus.OFFLINE
@@ -99,6 +106,32 @@ fun SoldierCard(
 
             // Status label
             StatusLabel(soldier.status)
+
+            // Self-destruct trigger
+            if (onRemove != null) {
+                Spacer(Modifier.width(4.dp))
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (confirmRemove) GwColors.critRed else Color.Transparent)
+                        .border(
+                            1.dp,
+                            if (confirmRemove) GwColors.critRed else GwColors.strokeHairline,
+                            RoundedCornerShape(4.dp),
+                        )
+                        .clickable { confirmRemove = !confirmRemove },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "⊗",
+                        style = GwTypography.Audit.copy(
+                            color = if (confirmRemove) GwColors.fg000 else GwColors.fg400,
+                            fontSize = 11.sp,
+                        ),
+                    )
+                }
+            }
         }
 
         Spacer(Modifier.height(GwSpacing.sp3.dp))
@@ -156,6 +189,51 @@ fun SoldierCard(
                     color = if (soldier.lastUpdateSec > 30) GwColors.warnAmber else GwColors.fg300,
                 ),
             )
+        }
+
+        // Inline confirm bar — only shown after ⊗ is tapped
+        if (confirmRemove && onRemove != null) {
+            Spacer(Modifier.height(GwSpacing.sp2.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(GwRadii.r1.dp))
+                    .background(GwColors.critRedBg)
+                    .border(1.dp, GwColors.critRed, RoundedCornerShape(GwRadii.r1.dp))
+                    .padding(horizontal = GwSpacing.sp2.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "REMOVE SOLDIER?",
+                    style = GwTypography.Audit.copy(color = GwColors.critRed, fontSize = 9.sp),
+                )
+                Spacer(Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .height(22.dp)
+                        .clip(RoundedCornerShape(GwRadii.r1.dp))
+                        .background(Color.Transparent)
+                        .border(1.dp, GwColors.strokeDefault, RoundedCornerShape(GwRadii.r1.dp))
+                        .clickable { confirmRemove = false }
+                        .padding(horizontal = 8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("CANCEL", style = GwTypography.Audit.copy(color = GwColors.fg200, fontSize = 9.sp))
+                }
+                Spacer(Modifier.width(4.dp))
+                Box(
+                    modifier = Modifier
+                        .height(22.dp)
+                        .clip(RoundedCornerShape(GwRadii.r1.dp))
+                        .background(GwColors.critRed)
+                        .border(1.dp, GwColors.critRed, RoundedCornerShape(GwRadii.r1.dp))
+                        .clickable { onRemove() }
+                        .padding(horizontal = 8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("CONFIRM", style = GwTypography.Audit.copy(color = GwColors.fg000, fontSize = 9.sp))
+                }
+            }
         }
     }
 }
