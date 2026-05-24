@@ -14,7 +14,7 @@ enum class ChainStage { POI, MEDIC, CASEVAC, ROLE2, ROLE3 }
 data class VitalsFrame(
     val timestampMs: Long,
     val hrBpm: Int?,                // null = sensor dropped
-    val spo2Pct: Int?,              // null on Instinct 2 (no SpO2 sensor — see user memory)
+    val spo2Pct: Int?,              // null on Instinct 2 unless packed in v0x02 packet
     val skinTempC: Float?,          // null on Instinct 2
     val accelMagG: Float?,          // magnitude of 3-axis accel, for movement analysis
     val batteryPct: Int,
@@ -22,6 +22,9 @@ data class VitalsFrame(
     /** Movement classifier from the watch: 0=still, 1=walk, 2=run, 3=fall, 4=seizure.
      *  null when only the standard HR-fallback channel is active (no Guardian app on the watch). */
     val movementClass: Int? = null,
+    /** GPS coordinates — populated when the watch sends a v0x02 packet with valid GPS fix. */
+    val latDeg: Double? = null,
+    val lonDeg: Double? = null,
 )
 
 /** Derived health state from the anomaly engine. */

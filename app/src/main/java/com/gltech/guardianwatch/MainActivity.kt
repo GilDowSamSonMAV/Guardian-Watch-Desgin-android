@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import com.gltech.guardianwatch.ble.BleService
 import com.gltech.guardianwatch.ble.ScannedDevice
 import com.gltech.guardianwatch.ble.VitalsRepository
+import com.gltech.guardianwatch.location.MedicLocationProvider
 import com.gltech.guardianwatch.casualty.Casualty
 import com.gltech.guardianwatch.casualty.Triage
 import com.gltech.guardianwatch.kiosk.KioskController
@@ -41,6 +42,7 @@ private const val SELF_ID = "M.ROSEN"
 class MainActivity : ComponentActivity() {
 
     @Inject lateinit var vitalsRepository: VitalsRepository
+    @Inject lateinit var medicLocationProvider: MedicLocationProvider
 
     private lateinit var modeController: ModeController
     private lateinit var kioskController: KioskController
@@ -80,6 +82,7 @@ class MainActivity : ComponentActivity() {
 
         // Request permissions on first boot — required before BLE service starts.
         requestRuntimePermissions()
+        medicLocationProvider.start()
 
         // Bind foreground service (starts it too if not running).
         val svcIntent = Intent(this, BleService::class.java)
@@ -95,12 +98,14 @@ class MainActivity : ComponentActivity() {
                     modeController = modeController,
                     vitalsRepository = vitalsRepository,
                     bleServiceState = bleServiceState,
+                    medicLocationProvider = medicLocationProvider,
                 )
             }
         }
     }
 
     override fun onDestroy() {
+        medicLocationProvider.stop()
         try { unbindService(serviceConnection) } catch (_: Throwable) {}
         super.onDestroy()
     }
@@ -116,6 +121,8 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             perms += Manifest.permission.POST_NOTIFICATIONS
         }
+        // GPS for medic position on tactical map (all API levels).
+        perms += Manifest.permission.ACCESS_FINE_LOCATION
         val missing = perms.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
@@ -130,10 +137,12 @@ private fun App(
     modeController: ModeController,
     vitalsRepository: VitalsRepository,
     bleServiceState: State<BleService?>,
+    medicLocationProvider: MedicLocationProvider,
 ) {
     val currentMode by modeController.currentMode.collectAsState(initial = null)
     val streams by vitalsRepository.streams.collectAsState()
     val bleService by bleServiceState
+    val medicLocation by medicLocationProvider.location.collectAsState()
     val scope = rememberCoroutineScope()
     var showPairingDialog by remember { mutableStateOf(false) }
 
@@ -144,6 +153,7 @@ private fun App(
         )
         AppMode.MEDIC_DASHBOARD -> TacticalDashboard(
             streams = streams,
+            medicLocation = medicLocation,
             onBack = { scope.launch { modeController.clear() } },
             onPairWatch = bleService?.let { { showPairingDialog = true } },
         )
@@ -170,25 +180,28 @@ private fun App(
                 )
                 svc.pairAndConnect(casualty)
                 showPairingDialog = false
+                // Navigate to tactical dashboard so the watch pin appears on the map immediately.
+                scope.launch { modeController.setMode(AppMode.MEDIC_DASHBOARD) }
             },
             onDismiss = { showPairingDialog = false },
         )
     }
 }
 
-/** Build a placeholder Casualty from a scanned device. The medic can edit
- *  name / age / MGRS / triage later (future feature). Auto-picks the next
- *  unused CAS-NNNN ID. */
+/** Build a Casualty from a scanned device. Auto-assigns WCH-NNNN as the watch ID. */
 private fun buildCasualtyFromScan(
     scanned: ScannedDevice,
     existingIds: Collection<String>,
 ): Casualty {
     val nextIndex = existingIds
-        .mapNotNull { it.removePrefix("CAS-").toIntOrNull() }
+        .mapNotNull { it.removePrefix("WCH-").toIntOrNull() }
         .maxOrNull()?.plus(1) ?: 1
+    val watchId = "WCH-" + nextIndex.toString().padStart(4, '0')
+    // Use last 4 chars of MAC as short identifier in the name until medic updates it
+    val macSuffix = scanned.mac.takeLast(5).replace(":", "")
     return Casualty(
-        id = "CAS-" + nextIndex.toString().padStart(4, '0'),
-        name = scanned.name ?: "Unknown",
+        id = watchId,
+        name = scanned.name?.takeIf { it.isNotBlank() } ?: "WATCH-$macSuffix",
         age = 0,
         mgrs = "--",
         triage = Triage.IMMEDIATE,

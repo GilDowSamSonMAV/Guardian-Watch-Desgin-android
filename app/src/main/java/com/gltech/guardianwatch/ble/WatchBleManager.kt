@@ -141,14 +141,16 @@ class WatchBleManager(context: Context) : BleManager(context) {
         val tm = GuardianWatchProfile.parseTelemetry(bytes) ?: return
         currentBattery = tm.batteryPct
         val frame = VitalsFrame(
-            timestampMs = tm.tsSec * 1000L,
-            hrBpm = tm.hrBpm,
-            spo2Pct = null,           // Instinct 2 has no SpO2 sensor — per hardware constraint
-            skinTempC = null,         // likewise
-            accelMagG = tm.accelMagG,
-            batteryPct = currentBattery,
-            rssiDbm = currentRssi,
+            timestampMs   = tm.tsSec * 1000L,
+            hrBpm         = tm.hrBpm,
+            spo2Pct       = tm.spo2Pct,   // non-null when v0x02 packet with valid SpO2
+            skinTempC     = null,
+            accelMagG     = tm.accelMagG,
+            batteryPct    = currentBattery,
+            rssiDbm       = currentRssi,
             movementClass = tm.movementClass,
+            latDeg        = tm.latDeg,    // non-null when v0x02 packet with valid GPS fix
+            lonDeg        = tm.lonDeg,
         )
         _vitals.tryEmit(frame)
     }

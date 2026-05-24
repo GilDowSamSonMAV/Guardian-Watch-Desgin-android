@@ -37,13 +37,31 @@ import org.osmdroid.views.overlay.infowindow.InfoWindow
  * Default center: IDF training area, Negev (Tze'elim region).
  * Override centerLat/centerLon for your real AO.
  */
+/**
+ * Live BLE watch to show on the map.
+ * @param geoPoint Real GPS position from the watch.
+ * @param hrBpm Current heart rate, shown in the info window.
+ * @param label Short label shown on the pin (e.g. casualty name or ID).
+ */
+data class LiveWatchPin(
+    val id: String,
+    val geoPoint: GeoPoint,
+    val hrBpm: Int?,
+    val label: String,
+)
+
 @Composable
 fun OsmTacMap(
+    soldiers: List<Soldier> = DemoData.allSoldiers(),
     company: Company,
     activeSquadId: String?,
     alertSoldierId: String?,
     /** GPS positions keyed by soldier ID. If null, demo scatter positions are used. */
     soldierPositions: Map<String, GeoPoint>? = null,
+    /** Live BLE watches to show as distinct LIVE pins on the map. */
+    liveWatches: List<LiveWatchPin> = emptyList(),
+    /** Medic's own GPS position from the tablet — shown as a distinct "MEDIC" pin. */
+    medicPosition: GeoPoint? = null,
     /** Map center — override for your real AO */
     centerLat: Double = DEFAULT_LAT,
     centerLon: Double = DEFAULT_LON,
@@ -117,7 +135,7 @@ fun OsmTacMap(
     }
 
     // Rebuild overlays whenever positions or data changes
-    DisposableEffect(positions, activeSquadId, alertSoldierId) {
+    DisposableEffect(soldiers, positions, activeSquadId, alertSoldierId, liveWatches, medicPosition) {
         mapView.overlays.clear()
         criticalMarkers.clear()
 
@@ -149,7 +167,7 @@ fun OsmTacMap(
         }
 
         // 2. Draw Soldiers
-        val allSoldiers = DemoData.allSoldiers()
+        val allSoldiers = soldiers
 
         allSoldiers.forEach { soldier ->
             val geoPoint = positions[soldier.id] ?: return@forEach
@@ -200,7 +218,50 @@ fun OsmTacMap(
             }
         }
 
-        // 3. Add HLZ (Helicopter Landing Zone)
+        // 3. Draw Live BLE Watch pins — real GPS, distinct green pulsing style
+        liveWatches.forEach { pin ->
+            val marker = Marker(mapView).apply {
+                position = pin.geoPoint
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                title = "LIVE · ${pin.label}"
+                snippet = "HR ${pin.hrBpm ?: "--"} bpm · GPS watch"
+                icon = buildLiveWatchIcon(context, density)
+                setOnMarkerClickListener { m, _ -> m.showInfoWindow(); true }
+            }
+            mapView.overlays.add(marker)
+            criticalMarkers.add(marker)   // reuse blink loop for pulsing effect
+        }
+
+        // Auto-center: squad takes priority (user tapped a class), then medic, then first live watch
+        if (activeSquadId != null) {
+            val squad = DemoData.findSquad(activeSquadId)
+            if (squad != null) {
+                val squadPoints = squad.soldiers.mapNotNull { positions[it.id] }
+                if (squadPoints.isNotEmpty()) {
+                    val avgLat = squadPoints.map { it.latitude }.average()
+                    val avgLon = squadPoints.map { it.longitude }.average()
+                    mapView.controller.animateTo(GeoPoint(avgLat, avgLon))
+                }
+            }
+        } else {
+            val centerTarget = medicPosition ?: liveWatches.firstOrNull()?.geoPoint
+            centerTarget?.let { mapView.controller.animateTo(it) }
+        }
+
+        // 4. Draw Medic pin — the tablet operator's own GPS position
+        if (medicPosition != null) {
+            val marker = Marker(mapView).apply {
+                position = medicPosition
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                title = "MEDIC · YOU ARE HERE"
+                snippet = "Tablet GPS · %.5f, %.5f".format(medicPosition.latitude, medicPosition.longitude)
+                icon = buildMedicIcon(context, density)
+                setOnMarkerClickListener { m, _ -> m.showInfoWindow(); true }
+            }
+            mapView.overlays.add(marker)
+        }
+
+        // 5. Add HLZ (Helicopter Landing Zone)
         val hlzMarker = Marker(mapView).apply {
             position = GeoPoint(centerLat + 0.005, centerLon - 0.003)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
@@ -210,7 +271,7 @@ fun OsmTacMap(
         }
         mapView.overlays.add(hlzMarker)
 
-        // 4. Add CCP (Casualty Collection Point / תאג״ד)
+        // 6. Add CCP (Casualty Collection Point / תאג״ד)
         val ccpMarker = Marker(mapView).apply {
             position = GeoPoint(centerLat - 0.002, centerLon + 0.001)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
@@ -248,7 +309,7 @@ const val DEFAULT_LON = 35.6124
  * 3 platoons, 4 squads each, 8 soldiers per squad.
  * Each squad forms a loose cluster.
  */
-private fun buildDemoPositions(company: Company, centerLat: Double, centerLon: Double): Map<String, GeoPoint> {
+internal fun buildDemoPositions(company: Company, centerLat: Double, centerLon: Double): Map<String, GeoPoint> {
     val result = mutableMapOf<String, GeoPoint>()
 
     // ~0.005 degrees ≈ 500m
@@ -352,6 +413,96 @@ private fun buildTacticalRoutes(centerLat: Double, centerLon: Double): List<Rout
             GeoPoint(centerLat - 0.008, centerLon + 0.009)
         ), android.graphics.Color.parseColor("#43AFC1"))  // Cyan info
     )
+}
+
+/**
+ * Bright green pulsing pin for a live BLE watch.
+ * Larger than soldier dots and labelled "LIVE" so it stands out clearly.
+ */
+private fun buildLiveWatchIcon(
+    context: android.content.Context,
+    density: Float,
+): android.graphics.drawable.BitmapDrawable {
+    val dotRadius  = 16f * density
+    val ringRadius = dotRadius + 6f * density
+    val size = ((ringRadius + 4f * density) * 2).toInt()
+    val cx = size / 2f
+    val cy = size / 2f
+
+    val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bmp)
+
+    // Outer ring (bright green)
+    canvas.drawCircle(cx, cy, ringRadius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.parseColor("#00FF88")
+        style = Paint.Style.STROKE
+        strokeWidth = 4f * density
+        alpha = 200
+    })
+    // Filled dot
+    canvas.drawCircle(cx, cy, dotRadius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.parseColor("#00FF88")
+        style = Paint.Style.FILL
+    })
+    // Dark border
+    canvas.drawCircle(cx, cy, dotRadius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.argb(160, 0, 0, 0)
+        style = Paint.Style.STROKE
+        strokeWidth = 2f * density
+    })
+    // "LIVE" text inside
+    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.BLACK
+        textSize = 9f * density
+        typeface = android.graphics.Typeface.DEFAULT_BOLD
+        textAlign = Paint.Align.CENTER
+    }
+    canvas.drawText("LIVE", cx, cy - (textPaint.ascent() + textPaint.descent()) / 2f, textPaint)
+
+    return android.graphics.drawable.BitmapDrawable(context.resources, bmp)
+}
+
+/**
+ * Blue cross-hair pin for the medic's own position (tablet GPS).
+ */
+private fun buildMedicIcon(
+    context: android.content.Context,
+    density: Float,
+): android.graphics.drawable.BitmapDrawable {
+    val dotRadius  = 14f * density
+    val ringRadius = dotRadius + 7f * density
+    val size = ((ringRadius + 4f * density) * 2).toInt()
+    val cx = size / 2f
+    val cy = size / 2f
+
+    val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bmp)
+
+    // Outer ring (blue)
+    canvas.drawCircle(cx, cy, ringRadius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.parseColor("#2196F3")
+        style = Paint.Style.STROKE
+        strokeWidth = 4f * density
+    })
+    // Filled dot (white center)
+    canvas.drawCircle(cx, cy, dotRadius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.parseColor("#2196F3")
+        style = Paint.Style.FILL
+    })
+    canvas.drawCircle(cx, cy, dotRadius * 0.45f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.WHITE
+        style = Paint.Style.FILL
+    })
+    // "MED" label
+    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.WHITE
+        textSize = 7f * density
+        typeface = android.graphics.Typeface.DEFAULT_BOLD
+        textAlign = Paint.Align.CENTER
+    }
+    canvas.drawText("MED", cx, cy - (textPaint.ascent() + textPaint.descent()) / 2f, textPaint)
+
+    return android.graphics.drawable.BitmapDrawable(context.resources, bmp)
 }
 
 private fun buildTextIcon(

@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlin.random.Random
+import org.osmdroid.util.GeoPoint
 
 /**
  * Drives the "live" simulation for demo purposes.
@@ -23,8 +24,9 @@ class SimulationEngine {
     var tick by mutableStateOf(0L)
         private set
 
-    val liveVitals    = mutableStateMapOf<String, LiveVitals>()
-    val livePositions = mutableStateMapOf<String, Pair<Float, Float>>()
+    val liveVitals       = mutableStateMapOf<String, LiveVitals>()
+    val livePositions    = mutableStateMapOf<String, Pair<Float, Float>>()
+    val liveGeoPositions = mutableStateMapOf<String, GeoPoint>()
 
     /** All soldiers who have been injured (vitals keep worsening each tick). */
     val injuredSoldierIds = mutableStateListOf<String>()
@@ -41,7 +43,11 @@ class SimulationEngine {
     private var injuryCountdown = -1
     private val rng = Random(System.currentTimeMillis())
 
-    fun start(allSoldiers: List<Soldier>, positions: Map<String, Pair<Float, Float>>) {
+    fun start(
+        allSoldiers: List<Soldier>,
+        positions: Map<String, Pair<Float, Float>>,
+        geoPositions: Map<String, GeoPoint> = emptyMap(),
+    ) {
         if (isRunning) return
         isRunning = true
         tick = 0
@@ -67,6 +73,9 @@ class SimulationEngine {
         livePositions.clear()
         livePositions.putAll(positions)
 
+        liveGeoPositions.clear()
+        liveGeoPositions.putAll(geoPositions)
+
         injuryCountdown = rng.nextInt(15, 31)   // first injury in 15–30 s
     }
 
@@ -75,6 +84,7 @@ class SimulationEngine {
         tick = 0
         liveVitals.clear()
         livePositions.clear()
+        liveGeoPositions.clear()
         injuredSoldierId = null
         injuryNotificationPending = false
         injuryCountdown = -1
@@ -121,7 +131,7 @@ class SimulationEngine {
             )
         }
 
-        // Drift map positions for all soldiers
+        // Drift canvas positions (used by TacMap overlay)
         val posUpdates = mutableMapOf<String, Pair<Float, Float>>()
         livePositions.forEach { (id, pos) ->
             val dx = (rng.nextFloat() - 0.5f) * 0.006f
@@ -130,6 +140,16 @@ class SimulationEngine {
                              (pos.second + dy).coerceIn(0.10f, 0.90f)
         }
         livePositions.putAll(posUpdates)
+
+        // Drift GeoPoint positions — healthy soldiers move, injured stay still
+        val geoUpdates = mutableMapOf<String, GeoPoint>()
+        liveGeoPositions.forEach { (id, pos) ->
+            if (id in injuredSoldierIds) return@forEach
+            val dLat = (rng.nextFloat() - 0.5f) * 0.0004
+            val dLon = (rng.nextFloat() - 0.5f) * 0.0004
+            geoUpdates[id] = GeoPoint(pos.latitude + dLat, pos.longitude + dLon)
+        }
+        liveGeoPositions.putAll(geoUpdates)
 
         // Injury countdown
         if (injuryCountdown > 0) {

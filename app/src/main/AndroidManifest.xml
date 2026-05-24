@@ -15,8 +15,10 @@
         android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
-        android:maxSdkVersion="30" />
+
+    <!-- GPS location — needed for medic position on the tactical map. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- BLE hardware required. Without this, Google Play filters out unsupported devices. -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />

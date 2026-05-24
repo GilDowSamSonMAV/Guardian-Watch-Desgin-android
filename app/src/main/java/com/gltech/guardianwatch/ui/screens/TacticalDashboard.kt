@@ -19,7 +19,9 @@ import androidx.compose.ui.unit.sp
 import com.gltech.guardianwatch.ble.CasualtyStream
 import com.gltech.guardianwatch.casualty.HealthTone
 import com.gltech.guardianwatch.model.*
+import android.location.Location
 import com.gltech.guardianwatch.ui.components.*
+import org.osmdroid.util.GeoPoint
 import com.gltech.guardianwatch.ui.theme.GwColors
 import com.gltech.guardianwatch.ui.theme.GwRadii
 import com.gltech.guardianwatch.ui.theme.GwSpacing
@@ -58,6 +60,7 @@ fun TacticalDashboard(
     company: Company = DemoData.COMPANY,
     alert: CriticalAlert? = DemoData.CRITICAL_ALERT,
     streams: Map<String, CasualtyStream> = emptyMap(),
+    medicLocation: Location? = null,
     onBack: () -> Unit = {},
     onPairWatch: (() -> Unit)? = null,
 ) {
@@ -83,6 +86,11 @@ fun TacticalDashboard(
     // ── Build initial static positions once (for TacMap and sim seeding) ──
     val staticPositions = remember {
         buildSoldierPositionsStatic(company, Random(1337))
+    }
+
+    // Base GeoPoint positions for OsmTacMap — seeded into simulation so dots move
+    val baseGeoPositions = remember {
+        buildDemoPositions(company, DEFAULT_LAT, DEFAULT_LON)
     }
 
     // Tick clock + simulation every second
@@ -152,7 +160,8 @@ fun TacticalDashboard(
             acknowledged = false,
         )
     }
-    val activeAlert = bleAlert ?: simActiveAlert ?: if (alertActive && !simulation.isRunning) alert else null
+    // Show alerts only from live BLE or simulation — never static demo alerts when idle
+    val activeAlert = bleAlert ?: if (simulation.isRunning) simActiveAlert else null
     val alertSoldier: Soldier? = activeAlert?.let { DemoData.findSoldier(it.soldierId) }
         ?.let { effectiveSoldier(it) }
 
@@ -216,6 +225,36 @@ fun TacticalDashboard(
     } else {
         staticPositions
     }
+
+    // Medic's GPS as GeoPoint — computed early so watch pins can fall back to it
+    val medicGeoPoint = medicLocation?.let { GeoPoint(it.latitude, it.longitude) }
+
+    // Build live watch pins — fall back to tablet GPS when watch has no GPS fix
+    val liveWatches = streams.values.mapNotNull { stream ->
+        val lat = stream.latest?.latDeg ?: medicGeoPoint?.latitude ?: return@mapNotNull null
+        val lon = stream.latest?.lonDeg ?: medicGeoPoint?.longitude ?: return@mapNotNull null
+        LiveWatchPin(
+            id       = stream.casualty.id,
+            geoPoint = GeoPoint(lat, lon),
+            hrBpm    = stream.latest?.hrBpm,
+            label    = "${stream.casualty.id} · ${stream.casualty.name}",
+        )
+    }
+
+    // Soldiers shown on map: perfect green state when idle, live vitals during sim
+    val displaySoldiers = remember(simulation.isRunning, simulation.liveVitals.toMap()) {
+        DemoData.allSoldiers().map { s ->
+            if (simulation.isRunning) effectiveSoldier(s)
+            else s.copy(status = SoldierStatus.OK, hr = 75, br = 16, spo2 = 98,
+                        coreTemp = 36.6f, risk = 0.5f)
+        }
+    }
+
+    // Live GeoPoint positions from simulation; null when idle (OsmTacMap uses defaults)
+    val mapGeoPositions: Map<String, org.osmdroid.util.GeoPoint>? =
+        if (simulation.isRunning && simulation.liveGeoPositions.isNotEmpty())
+            simulation.liveGeoPositions.toMap()
+        else null
 
     Column(modifier = Modifier.fillMaxSize().background(GwColors.bg000)) {
 
@@ -301,7 +340,7 @@ fun TacticalDashboard(
                             isRunning = simulation.isRunning,
                             onToggle = {
                                 if (simulation.isRunning) simulation.stop()
-                                else simulation.start(allSoldiers, staticPositions)
+                                else simulation.start(allSoldiers, staticPositions, baseGeoPositions)
                             },
                         )
                         Spacer(Modifier.width(GwSpacing.sp3.dp))
@@ -425,6 +464,24 @@ fun TacticalDashboard(
                                 modifier = Modifier.weight(1f),
                             )
                             VitalTile(
+                                label    = "SpO₂",
+                                value    = (liveLatest?.spo2Pct?.toString() ?: "--"),
+                                unit     = if (liveLatest?.spo2Pct != null) "%" else "",
+                                trend    = if (liveLatest?.spo2Pct != null) "pulse ox" else "no sensor",
+                                tone     = assess?.spo2Tone ?: com.gltech.guardianwatch.casualty.HealthTone.OK,
+                                modifier = Modifier.weight(1f),
+                            )
+                            VitalTile(
+                                label    = "GPS",
+                                value    = if (liveLatest?.latDeg != null) "LOCK" else "NO FIX",
+                                unit     = "",
+                                trend    = liveLatest?.latDeg?.let { lat ->
+                                    liveLatest.lonDeg?.let { lon -> "%.4f, %.4f".format(lat, lon) }
+                                } ?: "waiting…",
+                                tone     = com.gltech.guardianwatch.casualty.HealthTone.OK,
+                                modifier = Modifier.weight(1f),
+                            )
+                            VitalTile(
                                 label    = "MOVE",
                                 value    = mv,
                                 unit     = "",
@@ -522,9 +579,13 @@ fun TacticalDashboard(
 
             // RIGHT PANE — OSM satellite map
             OsmTacMap(
+                soldiers       = displaySoldiers,
+                soldierPositions = mapGeoPositions,
                 company        = company,
                 activeSquadId  = (navLevel as? TacNavLevel.Squad)?.squadId,
                 alertSoldierId = activeAlert?.soldierId,
+                liveWatches    = liveWatches,
+                medicPosition  = medicGeoPoint,
                 onPinClicked   = { soldier ->
                     onPickSquad(soldier.squadId)
                     selectedSoldier = soldier.id

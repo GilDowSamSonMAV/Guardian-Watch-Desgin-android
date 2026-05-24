@@ -23,6 +23,9 @@ nordicBle = "2.11.0"
 # ===== Serialization =====
 kotlinxSerialization = "1.7.3"
 
+# ===== Room =====
+room = "2.7.1"
+
 # ===== DI (Hilt) =====
 hilt = "2.58"
 hiltNavigationCompose = "1.2.0"
@@ -61,6 +64,11 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 nordic-ble = { group = "no.nordicsemi.android", name = "ble", version.ref = "nordicBle" }
 nordic-ble-ktx = { group = "no.nordicsemi.android", name = "ble-ktx", version.ref = "nordicBle" }
 nordic-ble-common = { group = "no.nordicsemi.android", name = "ble-common", version.ref = "nordicBle" }
+
+# Room
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
 # Hilt DI
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }

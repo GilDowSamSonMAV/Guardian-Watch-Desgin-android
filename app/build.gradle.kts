@@ -105,6 +105,11 @@ dependencies {
     implementation(libs.nordic.ble.ktx)
     implementation(libs.nordic.ble.common)
 
+    // ----- Room -----
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
     // ----- Hilt -----
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)

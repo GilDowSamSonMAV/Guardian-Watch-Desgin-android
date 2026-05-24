@@ -13,6 +13,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.gltech.guardianwatch.MainActivity
 import com.gltech.guardianwatch.R
 import com.gltech.guardianwatch.casualty.Casualty
@@ -50,7 +51,9 @@ class BleService : LifecycleService() {
         super.onCreate()
         createChannelIfNeeded()
         startForegroundWithNotification(watchCount = 0)
-        vitalsRepository.loadPersistedCasualties().forEach { pairAndConnect(it) }
+        lifecycleScope.launch {
+            vitalsRepository.loadPersistedCasualties().forEach { pairAndConnect(it) }
+        }
     }
 
     override fun onBind(intent: Intent): IBinder {
